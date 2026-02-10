@@ -27,8 +27,8 @@ export class ParentChildManager {
       }
 
       // 2. 如果有其他父节点，先出组
-      if (currentParent) {
-        this.removeFromContainer(device, currentParent)
+      if (currentParent && currentParent.isNode()) {
+        this.removeFromContainer(device, currentParent as Node)
       }
 
       // 3. 记录设备当前位置（绝对坐标）
@@ -147,7 +147,9 @@ export class ParentChildManager {
 
     // 依次移除所有子节点
     children.forEach(child => {
-      this.removeFromContainer(child, container)
+      if (child.isNode()) {
+        this.removeFromContainer(child as Node, container)
+      }
     })
 
     // 清空数据模型的 childrenIds
