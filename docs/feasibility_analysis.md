@@ -123,8 +123,8 @@ graph.on('node:mousedown', ({ node }) => {
 const bbox = node.getBBox()  // 获取节点包围盒
 const children = parent.getChildren()  // 获取所有子节点
 
-// 计算并集区域
-const unionBBox = Graph.getCellsBBox(children)
+// 计算并集区域（注意：是 graph 实例方法，不是静态方法）
+const unionBBox = graph.getCellsBBox(children)
 ```
 
 - **技术支持度**：⭐⭐⭐⭐⭐
@@ -135,11 +135,12 @@ const unionBBox = Graph.getCellsBBox(children)
 ```typescript
 import { debounce } from 'lodash-es'
 
-const autoExpand = debounce((parent: Node) => {
+const autoExpand = debounce((parent: Node, graph: Graph) => {
   const children = parent.getChildren()
   if (!children?.length) return
   
-  const bbox = Graph.getCellsBBox(children)
+  // 注意：graph.getCellsBBox 是实例方法
+  const bbox = graph.getCellsBBox(children)
   const padding = 40
   
   parent.resize(
@@ -154,7 +155,7 @@ const autoExpand = debounce((parent: Node) => {
 
 graph.on('node:change:*', ({ node }) => {
   const parent = node.getParent()
-  if (parent) autoExpand(parent)
+  if (parent) autoExpand(parent, graph)
 })
 ```
 

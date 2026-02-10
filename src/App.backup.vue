@@ -42,7 +42,7 @@ const handleStencilDragEnd = (config: StencilItemConfig, event: DragEvent) => {
       @item-drag-start="handleStencilDragStart"
       @item-drag-end="handleStencilDragEnd"
     />
-
+    
     <!-- 画布区域 -->
     <div class="canvas-area">
       <GraphCanvas />

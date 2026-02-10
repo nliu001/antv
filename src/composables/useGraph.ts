@@ -8,6 +8,7 @@ import { Graph } from '@antv/x6'
 import { ElMessage } from 'element-plus'
 import { createGraphConfig } from '@/utils/graphConfig'
 import { useGraphStore } from '@/stores/graphStore'
+import { useAutoExpand } from '@/composables/useAutoExpand'
 import type { GraphOptions } from '@/types/graph'
 
 /**
@@ -31,6 +32,9 @@ export function useGraph(options?: Partial<GraphOptions>) {
   const graphStore = useGraphStore()
   const containerRef = ref<HTMLElement | null>(null)
   const resizeObserver = ref<ResizeObserver | null>(null)
+
+  // 初始化自动扩容 Composable
+  const autoExpand = useAutoExpand()
 
   /**
    * 初始化 Graph 实例
@@ -83,7 +87,12 @@ export function useGraph(options?: Partial<GraphOptions>) {
         graphStore.setInteracting(false)
       })
 
+      // 设置 Graph 实例并启用自动扩容
+      autoExpand.setGraph(graph)
+      autoExpand.enable()
+
       console.log('[useGraph] Graph 初始化成功')
+      console.log('[useGraph] 自动扩容已启用')
     } catch (error) {
       console.error('[useGraph] Graph 初始化失败:', error)
       graphStore.setError(error as Error)
