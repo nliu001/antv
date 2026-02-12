@@ -4,7 +4,11 @@ import Toolbar from './components/canvas/Toolbar.vue'
 import Stencil from './components/canvas/Stencil.vue'
 import { useDnd } from '@/composables/useDnd'
 import { useNodeDrop } from '@/composables/useNodeDrop'
+import { useKeyboardState } from '@/composables/useKeyboardState'
 import type { StencilItemConfig } from '@/constants/stencil'
+
+// 初始化键盘状态管理
+const keyboard = useKeyboardState()
 
 // 初始化 Dnd 拖拽功能
 const { startDrag } = useDnd({
@@ -16,7 +20,9 @@ const { startDrag } = useDnd({
 useNodeDrop({
   enterDelay: 200,
   leaveDelay: 100,
-  leaveThreshold: 0.5
+  leaveThreshold: 0.5,
+  // ⭐ 传递 Ctrl 键状态检查函数
+  isCtrlPressed: () => keyboard.isCtrlPressed.value
 })
 
 /**

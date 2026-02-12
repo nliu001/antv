@@ -85,14 +85,25 @@ export class ParentChildManager {
 
       // 2. 记录设备当前位置（绝对坐标，X6 子节点位置就是绝对坐标）
       const devicePos = device.getPosition()
-
-      // 3. 移除父子关系
-      container.removeChild(device)
-
-      // 4. 恢复设备节点的 zIndex
+      console.log('[ParentChild] 出组前设备位置（绝对）:', devicePos)
+      
+      // 3. 解除父子关系
+      // ⚭ 关键：必须使用 unembed() 而非 removeChild()
+      // 根据 X6 官方文档：
+      //   - unembed(): 仅解除父子关系，子节点保留在画布上
+      //   - removeChild(): 解除父子关系 + 从画布删除子节点
+      container.unembed(device)
+      console.log('[ParentChild] 已解除父子关系 (unembed)')
+      
+      // 4. 恢复设备节点的位置
+      // unembed() 可能会影响节点位置，显式设置回原位置
+      device.setPosition(devicePos.x, devicePos.y)
+      console.log('[ParentChild] 出组后设备位置已恢复:', device.getPosition())
+      
+      // 5. 恢复设备节点的 zIndex
       ZIndexManager.setNodeZIndex(device)
-
-      // 5. 更新容器数据模型的 childrenIds
+      
+      // 6. 更新容器数据模型的 childrenIds
       const containerData = container.getData() as SystemNodeData
       if (containerData && containerData.childrenIds) {
         const index = containerData.childrenIds.indexOf(device.id!)

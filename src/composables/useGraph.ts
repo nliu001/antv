@@ -9,6 +9,8 @@ import { ElMessage } from 'element-plus'
 import { createGraphConfig } from '@/utils/graphConfig'
 import { useGraphStore } from '@/stores/graphStore'
 import { useAutoExpand } from '@/composables/useAutoExpand'
+import { useKeyboardState } from '@/composables/useKeyboardState'
+import { useNodeOutGroup } from '@/composables/useNodeOutGroup'
 import type { GraphOptions } from '@/types/graph'
 
 /**
@@ -35,6 +37,12 @@ export function useGraph(options?: Partial<GraphOptions>) {
 
   // 初始化自动扩容 Composable
   const autoExpand = useAutoExpand()
+
+  // 初始化键盘状态管理
+  const keyboardState = useKeyboardState()
+
+  // 初始化节点出组管理
+  const nodeOutGroup = useNodeOutGroup(null, () => keyboardState.isCtrlPressed.value)
 
   /**
    * 初始化 Graph 实例
@@ -91,8 +99,24 @@ export function useGraph(options?: Partial<GraphOptions>) {
       autoExpand.setGraph(graph)
       autoExpand.enable()
 
+      // 设置 Graph 实例并启用出组监听
+      nodeOutGroup.setGraph(graph)
+      nodeOutGroup.enable()
+
+      // 监听 Ctrl 键状态变化
+      keyboardState.onCtrlPress(() => {
+        console.log('[useGraph] Ctrl 键按下，暂停扩容')
+        autoExpand.pause()
+      })
+
+      keyboardState.onCtrlRelease(() => {
+        console.log('[useGraph] Ctrl 键松开，恢复扩容')
+        autoExpand.resume()
+      })
+
       console.log('[useGraph] Graph 初始化成功')
       console.log('[useGraph] 自动扩容已启用')
+      console.log('[useGraph] Ctrl 键出组功能已启用')
     } catch (error) {
       console.error('[useGraph] Graph 初始化失败:', error)
       graphStore.setError(error as Error)

@@ -30,6 +30,8 @@ export interface UseNodeDropOptions {
   leaveDelay?: number
   // 出组面积阈值
   leaveThreshold?: number
+  // Ctrl 键状态检查函数
+  isCtrlPressed?: () => boolean
 }
 
 /**
@@ -62,6 +64,7 @@ export function useNodeDrop(options: UseNodeDropOptions = {}): UseNodeDropReturn
   const enterDelay = options.enterDelay ?? ENTER_GROUP_DELAY
   const leaveDelay = options.leaveDelay ?? LEAVE_GROUP_DELAY
   const leaveThreshold = options.leaveThreshold ?? LEAVE_OVERLAP_THRESHOLD
+  const isCtrlPressed = options.isCtrlPressed ?? (() => false)
 
   /**
    * 获取所有容器节点
@@ -239,6 +242,14 @@ export function useNodeDrop(options: UseNodeDropOptions = {}): UseNodeDropReturn
     // 只处理有父节点的设备
     const parent = node.getParent()
     if (!parent) return
+
+    // ⭐ 关键修复：如果按下 Ctrl 键，禁用自动出组逻辑
+    // 这种情况下由 useNodeOutGroup 处理出组
+    if (isCtrlPressed()) {
+      console.log('[useNodeDrop] Ctrl 键按下，跳过自动出组检测')
+      clearLeaveTimer()
+      return
+    }
 
     // 检测是否外溢
     if (isNodeOutOfContainer(node, parent, leaveThreshold)) {

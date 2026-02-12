@@ -29,6 +29,9 @@ export function useAutoExpand(initialGraph: Graph | null = null, config: Partial
   // 扩容状态标志（避免递归触发）
   const isExpanding = ref(false)
 
+  // 暂停标志（Ctrl 键按下时暂停扩容）
+  const isPaused = ref(false)
+
   // 事件处理器引用（用于清理）
   const eventHandlers: Array<() => void> = []
 
@@ -48,6 +51,10 @@ export function useAutoExpand(initialGraph: Graph | null = null, config: Partial
   function expandContainer(container: Node) {
     if (!graph || !expandConfig.enabled) return
     if (isExpanding.value) return // 防止递归触发
+    if (isPaused.value) {
+      console.log('[useAutoExpand] 扩容已暂停，跳过')
+      return // Ctrl 键按下时跳过扩容
+    }
 
     isExpanding.value = true
 
@@ -200,18 +207,28 @@ export function useAutoExpand(initialGraph: Graph | null = null, config: Partial
     graphInstance.on('node:change:size', sizeHandler)
     eventHandlers.push(() => graphInstance.off('node:change:size', sizeHandler))
 
-    // 监听子节点删除
-    const removeHandler = ({ node }: { node: Node }) => {
-      const parent = node.getParent()
-      if (parent && parent.isNode()) {
-        const parentData = parent.getData()
-        if (parentData?.type === NodeType.SYSTEM) {
-          debouncedExpand(parent)
-        }
-      }
-    }
-    graphInstance.on('node:removed', removeHandler)
-    eventHandlers.push(() => graphInstance.off('node:removed', removeHandler))
+    // ❌ 移除 node:removed 监听器
+    // 原因：子节点出组时不应触发容器收缩
+    // 容器遵循"不向右下收缩"原则，即使子节点离开也保持当前尺寸
+    // 详见：规范文档 P1 和日志分析报告
+    // 
+    // 问题复现：
+    // 1. removeChild() 触发 node:removed 事件
+    // 2. removeHandler 检测到 children.length === 0
+    // 3. expandContainer() 收缩容器到最小尺寸
+    // 4. 导致出组的子节点"消失"（被遮挡或超出视口）
+    //
+    // const removeHandler = ({ node }: { node: Node }) => {
+    //   const parent = node.getParent()
+    //   if (parent && parent.isNode()) {
+    //     const parentData = parent.getData()
+    //     if (parentData?.type === NodeType.SYSTEM) {
+    //       debouncedExpand(parent)
+    //     }
+    //   }
+    // }
+    // graphInstance.on('node:removed', removeHandler)
+    // eventHandlers.push(() => graphInstance.off('node:removed', removeHandler))
 
     console.log('[useAutoExpand] 自动扩容已启用')
   }
@@ -241,6 +258,26 @@ export function useAutoExpand(initialGraph: Graph | null = null, config: Partial
     expandContainer(container)
   }
 
+  /**
+   * 暂停自动扩容
+   * 
+   * 用于 Ctrl 键按下时禁用扩容
+   */
+  function pause() {
+    isPaused.value = true
+    console.log('[useAutoExpand] 扩容已暂停')
+  }
+
+  /**
+   * 恢复自动扩容
+   * 
+   * Ctrl 键松开时恢复扩容
+   */
+  function resume() {
+    isPaused.value = false
+    console.log('[useAutoExpand] 扩容已恢复')
+  }
+
   // 组件卸载时自动清理
   onUnmounted(() => {
     disable()
@@ -251,6 +288,9 @@ export function useAutoExpand(initialGraph: Graph | null = null, config: Partial
     enable,
     disable,
     manualExpand,
-    isExpanding
+    pause,
+    resume,
+    isExpanding,
+    isPaused
   }
 }
