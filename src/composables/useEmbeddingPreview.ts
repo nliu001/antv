@@ -3,8 +3,7 @@ import type { Node, Graph } from '@antv/x6'
 import { useGraphStore } from '@/stores/graphStore'
 import { NodeType, type SystemNodeData, type DeviceNodeData } from '@/types/node'
 
-const OVERLAP_THRESHOLD = 0.3
-const PREVIEW_PADDING = 40
+const PREVIEW_PADDING = 20
 const MIN_CONTAINER_SIZE = { width: 300, height: 200 }
 
 interface OriginalSize {
@@ -13,18 +12,16 @@ interface OriginalSize {
 }
 
 export interface UseEmbeddingPreviewOptions {
-  overlapThreshold?: number
   padding?: number
 }
 
 export function useEmbeddingPreview(options: UseEmbeddingPreviewOptions = {}) {
   const graphStore = useGraphStore()
   
-  const overlapThreshold = options.overlapThreshold ?? OVERLAP_THRESHOLD
   const padding = options.padding ?? PREVIEW_PADDING
   
   const originalSizes = new Map<string, OriginalSize>()
-  const previewingParent = ref<Node | null>(null)
+  const previewingParentId = ref<string | null>(null)
 
   const getGraph = (): Graph | null => {
     const graph = graphStore.graph
@@ -40,29 +37,32 @@ export function useEmbeddingPreview(options: UseEmbeddingPreviewOptions = {}) {
     return !children || children.length === 0
   }
 
-  const calculateOverlapRatio = (childBBox: DOMRect, parentBBox: DOMRect): number => {
-    const overlapX = Math.max(0, Math.min(childBBox.right, parentBBox.right) - Math.max(childBBox.left, parentBBox.left))
-    const overlapY = Math.max(0, Math.min(childBBox.bottom, parentBBox.bottom) - Math.max(childBBox.top, parentBBox.top))
-    const overlapArea = overlapX * overlapY
-    const childArea = childBBox.width * childBBox.height
+  const isOverlapping = (childBBox: { x: number; y: number; width: number; height: number }, parentBBox: { x: number; y: number; width: number; height: number }): boolean => {
+    const centerX = childBBox.x + childBBox.width / 2
+    const centerY = childBBox.y + childBBox.height / 2
     
-    return childArea > 0 ? overlapArea / childArea : 0
+    return (
+      centerX >= parentBBox.x &&
+      centerX <= parentBBox.x + parentBBox.width &&
+      centerY >= parentBBox.y &&
+      centerY <= parentBBox.y + parentBBox.height
+    )
   }
 
-  const calculateRequiredSize = (child: Node, parent: Node): { width: number; height: number } => {
-    const childBBox = child.getBBox()
-    const parentBBox = parent.getBBox()
+  const calculateRequiredSize = (childBBox: { x: number; y: number; width: number; height: number }, parentBBox: { x: number; y: number; width: number; height: number }): { width: number; height: number } => {
+    const rightEdge = childBBox.x + childBBox.width
+    const bottomEdge = childBBox.y + childBBox.height
     
     const requiredWidth = Math.max(
       MIN_CONTAINER_SIZE.width,
-      childBBox.width + padding * 2,
-      childBBox.x + childBBox.width - parentBBox.x + padding
+      rightEdge - parentBBox.x + padding,
+      parentBBox.width
     )
     
     const requiredHeight = Math.max(
       MIN_CONTAINER_SIZE.height,
-      childBBox.height + padding * 2,
-      childBBox.y + childBBox.height - parentBBox.y + padding
+      bottomEdge - parentBBox.y + padding,
+      parentBBox.height
     )
     
     return { width: requiredWidth, height: requiredHeight }
@@ -76,10 +76,10 @@ export function useEmbeddingPreview(options: UseEmbeddingPreviewOptions = {}) {
         height: currentSize.height
       })
     }
-    
+
     parent.resize(requiredSize.width, requiredSize.height)
-    previewingParent.value = parent
-    
+    previewingParentId.value = parent.id
+
     console.log('[useEmbeddingPreview] 预览扩容:', {
       parentId: parent.id,
       newSize: requiredSize
@@ -96,88 +96,68 @@ export function useEmbeddingPreview(options: UseEmbeddingPreviewOptions = {}) {
         originalSize
       })
     }
-    if (previewingParent.value === parent) {
-      previewingParent.value = null
+    if (previewingParentId.value === parent.id) {
+      previewingParentId.value = null
     }
   }
 
   const restoreAllPreviews = () => {
+    const graph = getGraph()
+    if (!graph) return
+
     originalSizes.forEach((_, parentId) => {
-      const graph = getGraph()
-      if (graph) {
-        const parent = graph.getCellById(parentId) as Node
-        if (parent) {
-          restoreParentSize(parent)
-        }
+      const parent = graph.getCellById(parentId) as Node
+      if (parent) {
+        restoreParentSize(parent)
       }
     })
     originalSizes.clear()
-    previewingParent.value = null
+    previewingParentId.value = null
   }
 
   const handleNodeMove = ({ node }: { node: Node }) => {
     const nodeData = node.getData<DeviceNodeData | SystemNodeData>()
     if (nodeData?.type !== NodeType.DEVICE && nodeData?.type !== NodeType.SYSTEM) return
-    
+
     const graph = getGraph()
     if (!graph) return
-    
+
     const childBBox = node.getBBox()
-    
+
     const allNodes = graph.getNodes()
     const emptyContainers = allNodes.filter(n => isEmptyContainer(n) && n.id !== node.id)
-    
+
+    if (emptyContainers.length === 0) return
+
     let foundTarget = false
-    
+
     for (const container of emptyContainers) {
       const containerBBox = container.getBBox()
-      
-      const graphContainer = graph.container
-      const containerRect = graphContainer.getBoundingClientRect()
-      const scale = graph.zoom()
-      
-      const childScreen = {
-        left: containerRect.left + (childBBox.x - graph.translate().tx) * scale,
-        right: containerRect.left + (childBBox.x + childBBox.width - graph.translate().tx) * scale,
-        top: containerRect.top + (childBBox.y - graph.translate().ty) * scale,
-        bottom: containerRect.top + (childBBox.y + childBBox.height - graph.translate().ty) * scale,
-        width: childBBox.width * scale,
-        height: childBBox.height * scale
-      }
-      
-      const parentScreen = {
-        left: containerRect.left + (containerBBox.x - graph.translate().tx) * scale,
-        right: containerRect.left + (containerBBox.x + containerBBox.width - graph.translate().tx) * scale,
-        top: containerRect.top + (containerBBox.y - graph.translate().ty) * scale,
-        bottom: containerRect.top + (containerBBox.y + containerBBox.height - graph.translate().ty) * scale,
-        width: containerBBox.width * scale,
-        height: containerBBox.height * scale
-      }
-      
-      const overlapRatio = calculateOverlapRatio(
-        childScreen as DOMRect,
-        parentScreen as DOMRect
-      )
-      
-      if (overlapRatio >= overlapThreshold) {
+
+      if (isOverlapping(childBBox, containerBBox)) {
         foundTarget = true
-        const requiredSize = calculateRequiredSize(node, container)
+        const requiredSize = calculateRequiredSize(childBBox, containerBBox)
         const currentSize = container.getSize()
-        
+
         if (requiredSize.width > currentSize.width || requiredSize.height > currentSize.height) {
           expandParentPreview(container, requiredSize)
         }
         break
       }
     }
-    
-    if (!foundTarget && previewingParent.value) {
-      const parent = previewingParent.value
-      restoreParentSize(parent as Node)
+
+    if (!foundTarget && previewingParentId.value) {
+      const graph = getGraph()
+      if (graph) {
+        const parent = graph.getCellById(previewingParentId.value) as Node
+        if (parent) {
+          restoreParentSize(parent)
+        }
+      }
     }
   }
 
-  const handleNodeMoved = ({ node: _node }: { node: Node }) => {
+  const handleNodeMoved = () => {
     setTimeout(() => {
       restoreAllPreviews()
     }, 100)
@@ -187,7 +167,7 @@ export function useEmbeddingPreview(options: UseEmbeddingPreviewOptions = {}) {
     if (currentParent && originalSizes.has(currentParent.id)) {
       originalSizes.delete(currentParent.id)
     }
-    previewingParent.value = null
+    previewingParentId.value = null
   }
 
   const enable = () => {
@@ -235,7 +215,7 @@ export function useEmbeddingPreview(options: UseEmbeddingPreviewOptions = {}) {
   })
 
   return {
-    previewingParent,
+    previewingParentId,
     enable,
     disable
   }
