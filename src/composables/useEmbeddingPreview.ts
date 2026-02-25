@@ -2,9 +2,7 @@ import { ref, onMounted, onBeforeUnmount } from 'vue'
 import type { Node, Graph } from '@antv/x6'
 import { useGraphStore } from '@/stores/graphStore'
 import { NodeType, type SystemNodeData, type DeviceNodeData } from '@/types/node'
-
-const PREVIEW_PADDING = 20
-const MIN_CONTAINER_SIZE = { width: 300, height: 200 }
+import { DEFAULT_EXPAND_CONFIG } from '@/config/containerConfig'
 
 interface OriginalSize {
   width: number
@@ -18,7 +16,8 @@ export interface UseEmbeddingPreviewOptions {
 export function useEmbeddingPreview(options: UseEmbeddingPreviewOptions = {}) {
   const graphStore = useGraphStore()
   
-  const padding = options.padding ?? PREVIEW_PADDING
+  // 使用统一配置的 padding，与 useAutoExpand 保持一致
+  const padding = options.padding ?? DEFAULT_EXPAND_CONFIG.padding
   
   const originalSizes = new Map<string, OriginalSize>()
   const previewingParentId = ref<string | null>(null)
@@ -31,12 +30,12 @@ export function useEmbeddingPreview(options: UseEmbeddingPreviewOptions = {}) {
 
   const calculateRequiredSize = (childBBox: { width: number; height: number }): { width: number; height: number } => {
     const requiredWidth = Math.max(
-      MIN_CONTAINER_SIZE.width,
+      DEFAULT_EXPAND_CONFIG.minWidth,
       childBBox.width + padding * 2
     )
     
     const requiredHeight = Math.max(
-      MIN_CONTAINER_SIZE.height,
+      DEFAULT_EXPAND_CONFIG.minHeight,
       childBBox.height + padding * 2
     )
     
