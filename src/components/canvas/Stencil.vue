@@ -10,7 +10,7 @@
 
     <!-- 物料分组 -->
     <div class="stencil-panel__content">
-      <el-collapse v-model="activeGroups" accordion>
+      <el-collapse v-model="activeGroups">
         <el-collapse-item
           v-for="group in groups"
           :key="group.name"
@@ -76,9 +76,9 @@ interface Emits {
 const emit = defineEmits<Emits>()
 
 /**
- * 默认展开的分组
+ * 默认展开的分组（数组支持多个分组同时展开）
  */
-const activeGroups = ref<string>('device')
+const activeGroups = ref<string[]>(['device', 'container'])
 
 /**
  * 物料项拖拽开始

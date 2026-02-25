@@ -1,84 +1,100 @@
 <template>
   <div class="graph-toolbar" :class="`toolbar-${position}`">
-    <div class="toolbar-content">
-      <!-- 放大按钮 -->
-      <el-tooltip content="放大" placement="left">
-        <el-button
-          :icon="ZoomIn"
-          circle
-          size="small"
-          :disabled="!canZoomIn"
-          @click="handleZoomIn"
-        />
-      </el-tooltip>
+    <div class="toolbar-wrapper">
+      <!-- 左侧工具按钮区域 -->
+      <div class="toolbar-content">
+        <!-- 放大按钮 -->
+        <el-tooltip content="放大" placement="left">
+          <el-button
+            :icon="ZoomIn"
+            circle
+            size="small"
+            :disabled="!canZoomIn"
+            @click="handleZoomIn"
+          />
+        </el-tooltip>
 
-      <!-- 缩小按钮 -->
-      <el-tooltip content="缩小" placement="left">
-        <el-button
-          :icon="ZoomOut"
-          circle
-          size="small"
-          :disabled="!canZoomOut"
-          @click="handleZoomOut"
-        />
-      </el-tooltip>
+        <!-- 缩小按钮 -->
+        <el-tooltip content="缩小" placement="left">
+          <el-button
+            :icon="ZoomOut"
+            circle
+            size="small"
+            :disabled="!canZoomOut"
+            @click="handleZoomOut"
+          />
+        </el-tooltip>
 
-      <!-- 适应画布按钮 -->
-      <el-tooltip content="适应画布" placement="left">
-        <el-button :icon="FullScreen" circle size="small" @click="handleZoomToFit" />
-      </el-tooltip>
+        <!-- 适应画布按钮 -->
+        <el-tooltip content="适应画布" placement="left">
+          <el-button :icon="FullScreen" circle size="small" @click="handleZoomToFit" />
+        </el-tooltip>
 
-      <!-- 实际大小按钮 -->
-      <el-tooltip content="实际大小 (100%)" placement="left">
-        <el-button :icon="Refresh" circle size="small" @click="handleResetZoom" />
-      </el-tooltip>
+        <!-- 实际大小按钮 -->
+        <el-tooltip content="实际大小 (100%)" placement="left">
+          <el-button :icon="Refresh" circle size="small" @click="handleResetZoom" />
+        </el-tooltip>
 
-      <!-- 分隔线 - 对齐工具 -->
-      <div class="toolbar-divider"></div>
+        <!-- 分隔线 - 对齐工具 -->
+        <div class="toolbar-divider"></div>
 
-      <!-- 对齐下拉菜单 -->
-      <el-dropdown trigger="click" @command="handleAlignCommand" :disabled="selectedCount < 2">
-        <el-button :icon="Operation" circle size="small" :disabled="selectedCount < 2" title="对齐与分布" />
-        <template #dropdown>
-          <el-dropdown-menu>
-            <el-dropdown-item command="alignLeft" :disabled="selectedCount < 2">
-              <el-icon><Back /></el-icon> 左对齐
-            </el-dropdown-item>
-            <el-dropdown-item command="alignCenter" :disabled="selectedCount < 2">
-              <el-icon><Switch /></el-icon> 垂直居中
-            </el-dropdown-item>
-            <el-dropdown-item command="alignRight" :disabled="selectedCount < 2">
-              <el-icon><Right /></el-icon> 右对齐
-            </el-dropdown-item>
-            <el-dropdown-item divided command="alignTop" :disabled="selectedCount < 2">
-              <el-icon><Top /></el-icon> 顶部对齐
-            </el-dropdown-item>
-            <el-dropdown-item command="alignMiddle" :disabled="selectedCount < 2">
-              <el-icon><Minus /></el-icon> 水平居中
-            </el-dropdown-item>
-            <el-dropdown-item command="alignBottom" :disabled="selectedCount < 2">
-              <el-icon><Bottom /></el-icon> 底部对齐
-            </el-dropdown-item>
-            <el-dropdown-item divided command="distributeHorizontally" :disabled="selectedCount < 3">
-              <el-icon><DCaret /></el-icon> 水平等距分布
-            </el-dropdown-item>
-            <el-dropdown-item command="distributeVertically" :disabled="selectedCount < 3">
-              <el-icon><CaretRight /></el-icon> 垂直等距分布
-            </el-dropdown-item>
-          </el-dropdown-menu>
-        </template>
-      </el-dropdown>
+        <!-- 对齐下拉菜单 -->
+        <el-dropdown trigger="click" @command="handleAlignCommand" :disabled="selectedCount < 2">
+          <el-button :icon="Operation" circle size="small" :disabled="selectedCount < 2" title="对齐与分布" />
+          <template #dropdown>
+            <el-dropdown-menu>
+              <el-dropdown-item command="alignLeft" :disabled="selectedCount < 2">
+                <el-icon><Back /></el-icon> 左对齐
+              </el-dropdown-item>
+              <el-dropdown-item command="alignCenter" :disabled="selectedCount < 2">
+                <el-icon><Switch /></el-icon> 垂直居中
+              </el-dropdown-item>
+              <el-dropdown-item command="alignRight" :disabled="selectedCount < 2">
+                <el-icon><Right /></el-icon> 右对齐
+              </el-dropdown-item>
+              <el-dropdown-item divided command="alignTop" :disabled="selectedCount < 2">
+                <el-icon><Top /></el-icon> 顶部对齐
+              </el-dropdown-item>
+              <el-dropdown-item command="alignMiddle" :disabled="selectedCount < 2">
+                <el-icon><Minus /></el-icon> 水平居中
+              </el-dropdown-item>
+              <el-dropdown-item command="alignBottom" :disabled="selectedCount < 2">
+                <el-icon><Bottom /></el-icon> 底部对齐
+              </el-dropdown-item>
+              <el-dropdown-item divided command="distributeHorizontally" :disabled="selectedCount < 3">
+                <el-icon><DCaret /></el-icon> 水平等距分布
+              </el-dropdown-item>
+              <el-dropdown-item command="distributeVertically" :disabled="selectedCount < 3">
+                <el-icon><CaretRight /></el-icon> 垂直等距分布
+              </el-dropdown-item>
+            </el-dropdown-menu>
+          </template>
+        </el-dropdown>
 
-      <!-- 撤销/重做按钮 -->
-      <el-tooltip content="撤销 (Ctrl+Z)" placement="left">
-        <el-button :icon="RefreshLeft" circle size="small" :disabled="!canUndo" @click="handleUndo" />
-      </el-tooltip>
-      <el-tooltip content="重做 (Ctrl+Y)" placement="left">
-        <el-button :icon="RefreshRight" circle size="small" :disabled="!canRedo" @click="handleRedo" />
-      </el-tooltip>
+        <!-- 撤销/重做按钮 -->
+        <el-tooltip content="撤销 (Ctrl+Z)" placement="left">
+          <el-button :icon="RefreshLeft" circle size="small" :disabled="!canUndo" @click="handleUndo" />
+        </el-tooltip>
+        <el-tooltip content="重做 (Ctrl+Y)" placement="left">
+          <el-button :icon="RefreshRight" circle size="small" :disabled="!canRedo" @click="handleRedo" />
+        </el-tooltip>
 
-      <!-- 缩放比例显示 -->
-      <div v-if="showZoomText" class="zoom-text">{{ zoomText }}</div>
+        <!-- 缩放比例显示 -->
+        <div v-if="showZoomText" class="zoom-text">{{ zoomText }}</div>
+      </div>
+
+      <!-- 分隔线 -->
+      <div class="toolbar-separator"></div>
+
+      <!-- 右侧快捷键说明区域 -->
+      <div class="shortcuts-panel">
+        <div class="shortcuts-list">
+          <div v-for="shortcut in shortcuts" :key="shortcut.key" class="shortcut-item">
+            <span class="shortcut-keys">{{ shortcut.key }}</span>
+            <span class="shortcut-desc">{{ shortcut.description }}</span>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -167,6 +183,22 @@ const canRedo = computed(() => {
   if (!graph) return false
   return graph.canRedo()
 })
+
+/**
+ * 快捷键列表
+ */
+const shortcuts = [
+  { key: 'Ctrl+Z', description: '撤销' },
+  { key: 'Ctrl+Y', description: '重做' },
+  { key: 'Ctrl+C', description: '复制' },
+  { key: 'Ctrl+V', description: '粘贴' },
+  { key: 'Ctrl+X', description: '剪切' },
+  { key: 'Ctrl+A', description: '全选' },
+  { key: 'Delete', description: '删除' },
+  { key: 'Space+拖拽', description: '平移画布' },
+  { key: 'Ctrl+拖拽', description: '节点出组' },
+  { key: 'Esc', description: '退出放置' },
+]
 
 /**
  * 放大画布
@@ -275,6 +307,13 @@ const handleRedo = () => {
   }
 }
 
+.toolbar-wrapper {
+  display: flex;
+  flex-direction: row;
+  gap: 12px;
+  align-items: flex-start;
+}
+
 .toolbar-content {
   display: flex;
   flex-direction: column;
@@ -285,9 +324,9 @@ const handleRedo = () => {
     width: 36px;
     height: 36px;
     border: 1px solid #dcdfe6;
-    flex-shrink: 0;  // 防止按钮被压缩
-    margin: 0 !important;  // 强制重置 margin
-    padding: 0 !important;  // 强制重置 padding
+    flex-shrink: 0;
+    margin: 0 !important;
+    padding: 0 !important;
 
     &:hover:not(:disabled) {
       color: #409eff;
@@ -302,10 +341,10 @@ const handleRedo = () => {
   }
 
   .el-tooltip {
-    display: flex;  // 确保 tooltip 容器也是 flex
+    display: flex;
     align-items: center;
     justify-content: center;
-    margin: 0;  // 重置 tooltip 容器的 margin
+    margin: 0;
   }
 }
 
@@ -325,5 +364,59 @@ const handleRedo = () => {
   background-color: #f5f7fa;
   border-radius: 4px;
   user-select: none;
+}
+
+.toolbar-separator {
+  width: 1px;
+  align-self: stretch;
+  background-color: #e8e8e8;
+  flex-shrink: 0;
+}
+
+.shortcuts-panel {
+  min-width: 140px;
+  padding-left: 4px;
+}
+
+.shortcuts-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: #303133;
+  margin-bottom: 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid #ebeef5;
+}
+
+.shortcuts-list {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.shortcut-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.shortcut-keys {
+  display: inline-block;
+  min-width: 70px;
+  padding: 2px 6px;
+  background-color: #f5f7fa;
+  border: 1px solid #e4e7ed;
+  border-radius: 3px;
+  font-family: 'Consolas', 'Monaco', monospace;
+  font-size: 10px;
+  color: #606266;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.shortcut-desc {
+  color: #909399;
+  flex: 1;
 }
 </style>
