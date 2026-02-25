@@ -62,6 +62,7 @@ const isSelected = computed(() => {
   box-sizing: border-box;
   transition: all 0.2s ease;
   cursor: move;
+  pointer-events: auto;
 
   &:hover {
     border-color: #409eff;
@@ -92,6 +93,7 @@ const isSelected = computed(() => {
   border-bottom: 1px solid #e4e7ed;
   border-top-left-radius: 6px;
   border-top-right-radius: 6px;
+  pointer-events: auto;
 
   .el-icon {
     color: #606266;
@@ -121,6 +123,7 @@ const isSelected = computed(() => {
   padding: 16px;
   overflow: hidden;
   position: relative;
+  pointer-events: none;
 }
 
 .empty-hint {

@@ -32,27 +32,21 @@ export const DEVICE_NODE_CONFIG = {
   }
 }
 
-/**
- * 系统容器默认配置
- */
 export const SYSTEM_CONTAINER_CONFIG = {
-  // 默认尺寸
   width: 200,
   height: 150,
 
-  // 默认样式
   attrs: {
     body: {
       fill: 'transparent',
       stroke: '#d9d9d9',
       strokeWidth: 2,
-      strokeDasharray: '5,5', // 虚线
+      strokeDasharray: '5,5',
       rx: 8,
-      ry: 8
-    }
+      ry: 8,
+    },
   },
 
-  // 默认数据
   defaultData: {
     minWidth: 200,
     minHeight: 150,
@@ -61,7 +55,6 @@ export const SYSTEM_CONTAINER_CONFIG = {
     childrenIds: []
   },
 
-  // 默认层级
   zIndex: 0
 }
 

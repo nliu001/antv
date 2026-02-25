@@ -36,18 +36,10 @@ export interface GraphState {
  * Graph 配置选项接口
  */
 export interface GraphOptions {
-  // 容器 DOM 元素
   container: HTMLElement
-
-  // 画布尺寸
-  width?: number | string
-  height?: number | string
-
-  // 是否显示网格
+  width?: number
+  height?: number
   showGrid?: boolean
-
-  // 是否启用对齐线
-  enableSnapline?: boolean
 }
 
 /**

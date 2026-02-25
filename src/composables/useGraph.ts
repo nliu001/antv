@@ -60,8 +60,7 @@ export function useGraph(options?: Partial<GraphOptions>) {
       const config = createGraphConfig(containerRef.value, {
         width: options?.width,
         height: options?.height,
-        showGrid: options?.showGrid,
-        enableSnapline: options?.enableSnapline
+        showGrid: options?.showGrid
       })
 
       // 创建 Graph 实例

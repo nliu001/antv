@@ -33,8 +33,8 @@ export const DEFAULT_EXPAND_CONFIG: ExpandConfig = {
   padding: 40,
 
   // 最小尺寸：空容器或子节点很小时的最小尺寸
-  minWidth: 200,
-  minHeight: 150,
+  minWidth: 300,
+  minHeight: 200,
 
   // 位置调整阈值：避免微小偏移导致的容器抖动
   positionThreshold: 5,
