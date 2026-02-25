@@ -71,9 +71,22 @@ export function createGraphConfig(
       findParent: 'bbox',
       frontOnly: false,
       validate: ({ child, parent }: { child: Node; parent: Node }) => {
-        const childData = child.getData<DeviceNodeData>()
+        const childData = child.getData<DeviceNodeData | SystemNodeData>()
         const parentData = parent.getData<SystemNodeData>()
-        const isValid = childData?.type === NodeType.DEVICE && parentData?.type === NodeType.SYSTEM
+        
+        // 父节点必须是系统容器
+        if (parentData?.type !== NodeType.SYSTEM) {
+          return false
+        }
+        
+        // 子节点可以是设备节点或系统容器（支持嵌套）
+        const isValid = childData?.type === NodeType.DEVICE || childData?.type === NodeType.SYSTEM
+        
+        // 防止自己嵌入自己
+        if (child.id === parent.id) {
+          return false
+        }
+        
         return isValid
       },
     },

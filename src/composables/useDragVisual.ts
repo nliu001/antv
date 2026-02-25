@@ -1,7 +1,7 @@
 import { onMounted, onBeforeUnmount } from 'vue'
 import type { Node } from '@antv/x6'
 import { useGraphStore } from '@/stores/graphStore'
-import { NodeType, type DeviceNodeData } from '@/types/node'
+import { NodeType, type DeviceNodeData, type SystemNodeData } from '@/types/node'
 
 const DRAGGING_OPACITY = 0.7
 const DRAGGING_SHADOW = {
@@ -35,7 +35,7 @@ export function useDragVisual(options: UseDragVisualOptions = {}) {
   const shadow = options.shadow ?? DRAGGING_SHADOW
 
   const handleNodeMove = ({ node }: { node: Node }) => {
-    const nodeData = node.getData<DeviceNodeData>()
+    const nodeData = node.getData<DeviceNodeData | SystemNodeData>()
     
     node.setAttrs({
       body: {
@@ -47,7 +47,8 @@ export function useDragVisual(options: UseDragVisualOptions = {}) {
       },
     })
 
-    if (nodeData?.type === NodeType.DEVICE) {
+    // 设备节点或系统容器都设置高 z-index
+    if (nodeData?.type === NodeType.DEVICE || nodeData?.type === NodeType.SYSTEM) {
       node.setZIndex(1000)
     }
   }
@@ -60,8 +61,9 @@ export function useDragVisual(options: UseDragVisualOptions = {}) {
       },
     })
 
-    const nodeData = node.getData<DeviceNodeData>()
-    if (nodeData?.type === NodeType.DEVICE) {
+    const nodeData = node.getData<DeviceNodeData | SystemNodeData>()
+    // 设备节点或系统容器恢复默认 z-index
+    if (nodeData?.type === NodeType.DEVICE || nodeData?.type === NodeType.SYSTEM) {
       const parent = node.getParent()
       if (parent && parent.isNode && parent.isNode()) {
         node.setZIndex(10)

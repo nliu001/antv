@@ -41,15 +41,16 @@ export function useNodeDrop(options: UseNodeDropOptions = {}): UseNodeDropReturn
   }
 
   const handleNodeEmbedded = ({ node, currentParent }: { node: Node; currentParent: Node | null }) => {
-    const nodeData = node.getData<DeviceNodeData>()
+    const nodeData = node.getData<DeviceNodeData | SystemNodeData>()
     console.log('[useNodeDrop] node:embedded 事件触发:', {
       nodeId: node.id,
       nodeType: nodeData?.type,
       parentId: currentParent?.id
     })
 
-    if (nodeData?.type !== NodeType.DEVICE) {
-      console.log('[useNodeDrop] 跳过非设备节点')
+    // 只处理设备节点或系统容器（支持嵌套）
+    if (nodeData?.type !== NodeType.DEVICE && nodeData?.type !== NodeType.SYSTEM) {
+      console.log('[useNodeDrop] 跳过非设备/系统节点')
       return
     }
 
@@ -70,7 +71,8 @@ export function useNodeDrop(options: UseNodeDropOptions = {}): UseNodeDropReturn
       node.toFront({ deep: false })
 
       console.log('[useNodeDrop] ✅ 入组完成:', {
-        device: node.id,
+        node: node.id,
+        nodeType: nodeData?.type,
         container: currentParent.id,
         nodeZIndex: node.getZIndex()
       })
@@ -80,8 +82,9 @@ export function useNodeDrop(options: UseNodeDropOptions = {}): UseNodeDropReturn
   const handleNodePositionChange = (args: { node: Node }) => {
     const { node } = args
 
-    const nodeData = node.getData<DeviceNodeData>()
-    if (nodeData?.type !== NodeType.DEVICE) return
+    const nodeData = node.getData<DeviceNodeData | SystemNodeData>()
+    // 只处理设备节点或系统容器（支持嵌套）
+    if (nodeData?.type !== NodeType.DEVICE && nodeData?.type !== NodeType.SYSTEM) return
 
     const parent = node.getParent()
     if (!isNode(parent)) return
