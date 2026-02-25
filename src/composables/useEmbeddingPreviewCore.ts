@@ -11,10 +11,6 @@ interface OriginalSize {
 const originalSizes = new Map<string, OriginalSize>()
 let previewingParentId: string | null = null
 
-/**
- * 扩容预览核心逻辑
- * 可被 useEmbeddingPreview 和 useDnd 共用
- */
 export const EmbeddingPreviewCore = {
   getPreviewingParentId: () => previewingParentId,
   
@@ -37,7 +33,6 @@ export const EmbeddingPreviewCore = {
     })
 
     if (emptyContainers.length === 0) {
-      // 没有空容器，还原当前预览
       if (previewingParentId) {
         const parent = rawGraph.getCellById(previewingParentId) as Node
         if (parent) {

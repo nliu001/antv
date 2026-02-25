@@ -53,6 +53,40 @@ export function useDnd(options: UseDndOptions = {}): UseDndReturn {
     }
   }
 
+  const handleMouseMove = (e: MouseEvent) => {
+    if (!isDragging.value || !currentDragConfig.value) return
+    
+    const rawGraph = getRawGraph()
+    if (!rawGraph) return
+    
+    // 将屏幕坐标转换为画布坐标
+    const point = rawGraph.clientToLocal(e.clientX, e.clientY)
+    
+    // 计算节点中心位置（假设节点以鼠标位置为中心）
+    const nodeWidth = currentDragConfig.value.width || 120
+    const nodeHeight = currentDragConfig.value.height || 80
+    
+    const childBBox = {
+      x: point.x - nodeWidth / 2,
+      y: point.y - nodeHeight / 2,
+      width: nodeWidth,
+      height: nodeHeight
+    }
+    
+    EmbeddingPreviewCore.checkAndPreview(rawGraph, childBBox)
+  }
+
+  const handleMouseUp = () => {
+    if (isDragging.value) {
+      const rawGraph = getRawGraph()
+      if (rawGraph) {
+        EmbeddingPreviewCore.restoreAll(rawGraph)
+      }
+      isDragging.value = false
+      currentDragConfig.value = null
+    }
+  }
+
   const startDrag = (config: StencilItemConfig, event: DragEvent) => {
     if (!dnd.value) {
       console.warn('[useDnd] Dnd 未初始化')
@@ -113,31 +147,6 @@ export function useDnd(options: UseDndOptions = {}): UseDndReturn {
       currentDragConfig.value = null
     })
 
-    rawGraph.on('node:change:position', (args) => {
-      if (isDragging.value && currentDragConfig.value) {
-        const position = args.current
-        
-        if (position) {
-          const childBBox = {
-            x: position.x,
-            y: position.y,
-            width: currentDragConfig.value.width || 120,
-            height: currentDragConfig.value.height || 80
-          }
-          
-          EmbeddingPreviewCore.checkAndPreview(rawGraph, childBBox)
-        }
-      }
-    })
-    
-    rawGraph.on('node:removed', () => {
-      if (isDragging.value) {
-        EmbeddingPreviewCore.restoreAll(rawGraph)
-        isDragging.value = false
-        currentDragConfig.value = null
-      }
-    })
-    
     // 节点嵌入时清除预览状态
     rawGraph.on('node:embedded', ({ currentParent }: { node: Node; currentParent: Node | null }) => {
       EmbeddingPreviewCore.onEmbedded(currentParent)
@@ -157,10 +166,16 @@ export function useDnd(options: UseDndOptions = {}): UseDndReturn {
         }
       })
     }
+    
+    // 添加全局鼠标事件监听
+    window.addEventListener('mousemove', handleMouseMove)
+    window.addEventListener('mouseup', handleMouseUp)
   })
 
   onBeforeUnmount(() => {
     destroy()
+    window.removeEventListener('mousemove', handleMouseMove)
+    window.removeEventListener('mouseup', handleMouseUp)
   })
 
   return {
