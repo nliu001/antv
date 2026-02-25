@@ -29,40 +29,15 @@ export function useEmbeddingPreview(options: UseEmbeddingPreviewOptions = {}) {
     return graph as Graph
   }
 
-  const isEmptyContainer = (node: Node): boolean => {
-    const data = node.getData<SystemNodeData>()
-    if (data?.type !== NodeType.SYSTEM) return false
-    
-    const children = node.getChildren()
-    return !children || children.length === 0
-  }
-
-  const isOverlapping = (childBBox: { x: number; y: number; width: number; height: number }, parentBBox: { x: number; y: number; width: number; height: number }): boolean => {
-    const centerX = childBBox.x + childBBox.width / 2
-    const centerY = childBBox.y + childBBox.height / 2
-    
-    return (
-      centerX >= parentBBox.x &&
-      centerX <= parentBBox.x + parentBBox.width &&
-      centerY >= parentBBox.y &&
-      centerY <= parentBBox.y + parentBBox.height
-    )
-  }
-
-  const calculateRequiredSize = (childBBox: { x: number; y: number; width: number; height: number }, parentBBox: { x: number; y: number; width: number; height: number }): { width: number; height: number } => {
-    const rightEdge = childBBox.x + childBBox.width
-    const bottomEdge = childBBox.y + childBBox.height
-    
+  const calculateRequiredSize = (childBBox: { width: number; height: number }): { width: number; height: number } => {
     const requiredWidth = Math.max(
       MIN_CONTAINER_SIZE.width,
-      rightEdge - parentBBox.x + padding,
-      parentBBox.width
+      childBBox.width + padding * 2
     )
     
     const requiredHeight = Math.max(
       MIN_CONTAINER_SIZE.height,
-      bottomEdge - parentBBox.y + padding,
-      parentBBox.height
+      childBBox.height + padding * 2
     )
     
     return { width: requiredWidth, height: requiredHeight }
@@ -79,11 +54,6 @@ export function useEmbeddingPreview(options: UseEmbeddingPreviewOptions = {}) {
 
     parent.resize(requiredSize.width, requiredSize.height)
     previewingParentId.value = parent.id
-
-    console.log('[useEmbeddingPreview] 预览扩容:', {
-      parentId: parent.id,
-      newSize: requiredSize
-    })
   }
 
   const restoreParentSize = (parent: Node) => {
@@ -91,10 +61,6 @@ export function useEmbeddingPreview(options: UseEmbeddingPreviewOptions = {}) {
     if (originalSize) {
       parent.resize(originalSize.width, originalSize.height)
       originalSizes.delete(parent.id)
-      console.log('[useEmbeddingPreview] 还原尺寸:', {
-        parentId: parent.id,
-        originalSize
-      })
     }
     if (previewingParentId.value === parent.id) {
       previewingParentId.value = null
@@ -115,9 +81,12 @@ export function useEmbeddingPreview(options: UseEmbeddingPreviewOptions = {}) {
     previewingParentId.value = null
   }
 
-  const handleNodeMove = ({ node }: { node: Node }) => {
+  const handleNodeMoving = ({ node }: { node: Node }) => {
     const nodeData = node.getData<DeviceNodeData | SystemNodeData>()
-    if (nodeData?.type !== NodeType.DEVICE && nodeData?.type !== NodeType.SYSTEM) return
+    
+    if (nodeData?.type !== NodeType.DEVICE && nodeData?.type !== NodeType.SYSTEM) {
+      return
+    }
 
     const graph = getGraph()
     if (!graph) return
@@ -125,7 +94,15 @@ export function useEmbeddingPreview(options: UseEmbeddingPreviewOptions = {}) {
     const childBBox = node.getBBox()
 
     const allNodes = graph.getNodes()
-    const emptyContainers = allNodes.filter(n => isEmptyContainer(n) && n.id !== node.id)
+    const emptyContainers = allNodes.filter(n => {
+      const data = n.getData<SystemNodeData>()
+      const isSystem = data?.type === NodeType.SYSTEM
+      const children = n.getChildren()
+      const isEmpty = !children || children.length === 0
+      const isNotSelf = n.id !== node.id
+      
+      return isSystem && isEmpty && isNotSelf
+    })
 
     if (emptyContainers.length === 0) return
 
@@ -133,10 +110,22 @@ export function useEmbeddingPreview(options: UseEmbeddingPreviewOptions = {}) {
 
     for (const container of emptyContainers) {
       const containerBBox = container.getBBox()
-
-      if (isOverlapping(childBBox, containerBBox)) {
+      
+      const parentRight = containerBBox.x + containerBBox.width
+      const parentBottom = containerBBox.y + containerBBox.height
+      const childRight = childBBox.x + childBBox.width
+      const childBottom = childBBox.y + childBBox.height
+      
+      const hasIntersection = !(
+        childBBox.x > parentRight ||
+        childRight < containerBBox.x ||
+        childBBox.y > parentBottom ||
+        childBottom < containerBBox.y
+      )
+      
+      if (hasIntersection) {
         foundTarget = true
-        const requiredSize = calculateRequiredSize(childBBox, containerBBox)
+        const requiredSize = calculateRequiredSize(childBBox)
         const currentSize = container.getSize()
 
         if (requiredSize.width > currentSize.width || requiredSize.height > currentSize.height) {
@@ -172,29 +161,22 @@ export function useEmbeddingPreview(options: UseEmbeddingPreviewOptions = {}) {
 
   const enable = () => {
     const graph = getGraph()
-    if (!graph) {
-      console.warn('[useEmbeddingPreview] Graph 实例不存在')
-      return
-    }
+    if (!graph) return
 
-    graph.on('node:move', handleNodeMove)
+    graph.on('node:moving', handleNodeMoving)
     graph.on('node:moved', handleNodeMoved)
     graph.on('node:embedded', handleNodeEmbedded)
-
-    console.log('[useEmbeddingPreview] 已启用')
   }
 
   const disable = () => {
     const graph = getGraph()
     if (!graph) return
 
-    graph.off('node:move', handleNodeMove)
+    graph.off('node:moving', handleNodeMoving)
     graph.off('node:moved', handleNodeMoved)
     graph.off('node:embedded', handleNodeEmbedded)
 
     restoreAllPreviews()
-
-    console.log('[useEmbeddingPreview] 已禁用')
   }
 
   onMounted(() => {
