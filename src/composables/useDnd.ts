@@ -4,6 +4,7 @@ import type { Node } from '@antv/x6'
 import { useGraphStore } from '@/stores/graphStore'
 import { nanoid } from 'nanoid'
 import type { StencilItemConfig } from '@/constants/stencil'
+import { EmbeddingPreviewCore } from './useEmbeddingPreviewCore'
 
 export interface UseDndOptions {
   scaled?: boolean
@@ -22,6 +23,7 @@ export function useDnd(options: UseDndOptions = {}): UseDndReturn {
   const graphStore = useGraphStore()
   const dnd = ref<Dnd | null>(null)
   const isDragging = ref(false)
+  const currentDragConfig = ref<StencilItemConfig | null>(null)
 
   const getRawGraph = (): Graph | null => {
     const graph = graphStore.graph
@@ -64,6 +66,7 @@ export function useDnd(options: UseDndOptions = {}): UseDndReturn {
     }
 
     try {
+      currentDragConfig.value = config
       const nodeData = config.createData()
       const nodeId = nanoid()
 
@@ -107,12 +110,37 @@ export function useDnd(options: UseDndOptions = {}): UseDndReturn {
       })
 
       isDragging.value = false
+      currentDragConfig.value = null
     })
 
     rawGraph.on('node:change:position', (args) => {
-      if (isDragging.value) {
-        console.log('[useDnd] 拖拽中位置变化:', args.node.id, args.current)
+      if (isDragging.value && currentDragConfig.value) {
+        const position = args.current
+        
+        if (position) {
+          const childBBox = {
+            x: position.x,
+            y: position.y,
+            width: currentDragConfig.value.width || 120,
+            height: currentDragConfig.value.height || 80
+          }
+          
+          EmbeddingPreviewCore.checkAndPreview(rawGraph, childBBox)
+        }
       }
+    })
+    
+    rawGraph.on('node:removed', () => {
+      if (isDragging.value) {
+        EmbeddingPreviewCore.restoreAll(rawGraph)
+        isDragging.value = false
+        currentDragConfig.value = null
+      }
+    })
+    
+    // 节点嵌入时清除预览状态
+    rawGraph.on('node:embedded', ({ currentParent }: { node: Node; currentParent: Node | null }) => {
+      EmbeddingPreviewCore.onEmbedded(currentParent)
     })
   }
 
