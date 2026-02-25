@@ -16,6 +16,7 @@ import { usePlugins } from '@/composables/usePlugins'
 import { useDragVisual } from '@/composables/useDragVisual'
 import { useSpacePan } from '@/composables/useSpacePan'
 import { useAlignment } from '@/composables/useAlignment'
+import { useEmbeddingPreview } from '@/composables/useEmbeddingPreview'
 import type { GraphOptions } from '@/types/graph'
 
 /**
@@ -71,6 +72,9 @@ export function useGraph(options?: Partial<GraphOptions>) {
 
   // 初始化对齐分布功能
   const alignment = useAlignment()
+
+  // 初始化嵌入预览（空容器自动扩容）
+  useEmbeddingPreview()
 
   /**
    * 初始化 Graph 实例
