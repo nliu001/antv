@@ -1,5 +1,7 @@
 import { ref, onMounted, onBeforeUnmount } from 'vue'
+import { toRaw } from 'vue'
 import { useGraphStore } from '@/stores/graphStore'
+import type { Graph } from '@antv/x6'
 
 export interface UseSpacePanOptions {
   enabled?: boolean
@@ -18,6 +20,13 @@ export function useSpacePan(options: UseSpacePanOptions = {}): UseSpacePanReturn
   const isSpacePressed = ref(false)
   const isPanning = ref(false)
   const lastPos = ref({ x: 0, y: 0 })
+  const wasRubberbandEnabled = ref(false)
+
+  const getGraph = (): Graph | null => {
+    const graph = graphStore.graph
+    if (!graph) return null
+    return toRaw(graph) as Graph
+  }
 
   const handleKeyDown = (e: KeyboardEvent) => {
     if (!enabled.value) return
@@ -26,10 +35,16 @@ export function useSpacePan(options: UseSpacePanOptions = {}): UseSpacePanReturn
       e.preventDefault()
       isSpacePressed.value = true
       
-      const graph = graphStore.graph
+      const graph = getGraph()
       if (graph) {
         const container = graph.container
         container.style.cursor = 'grab'
+        
+        // 禁用框选功能，避免 Space+拖拽时出现选框
+        if (graph.isRubberbandEnabled && graph.isRubberbandEnabled()) {
+          wasRubberbandEnabled.value = true
+          graph.disableRubberband()
+        }
       }
       
       console.log('[useSpacePan] Space 键按下，进入抓取模式')
@@ -43,10 +58,16 @@ export function useSpacePan(options: UseSpacePanOptions = {}): UseSpacePanReturn
       isSpacePressed.value = false
       isPanning.value = false
       
-      const graph = graphStore.graph
+      const graph = getGraph()
       if (graph) {
         const container = graph.container
         container.style.cursor = 'default'
+        
+        // 恢复框选功能
+        if (wasRubberbandEnabled.value) {
+          graph.enableRubberband()
+          wasRubberbandEnabled.value = false
+        }
       }
       
       console.log('[useSpacePan] Space 键松开，退出抓取模式')
@@ -58,10 +79,11 @@ export function useSpacePan(options: UseSpacePanOptions = {}): UseSpacePanReturn
     
     if (e.button === 0) {
       e.preventDefault()
+      e.stopPropagation()
       isPanning.value = true
       lastPos.value = { x: e.clientX, y: e.clientY }
       
-      const graph = graphStore.graph
+      const graph = getGraph()
       if (graph) {
         const container = graph.container
         container.style.cursor = 'grabbing'
@@ -72,7 +94,7 @@ export function useSpacePan(options: UseSpacePanOptions = {}): UseSpacePanReturn
   const handleMouseMove = (e: MouseEvent) => {
     if (!enabled.value || !isPanning.value) return
     
-    const graph = graphStore.graph
+    const graph = getGraph()
     if (!graph) return
     
     const dx = e.clientX - lastPos.value.x
@@ -90,7 +112,7 @@ export function useSpacePan(options: UseSpacePanOptions = {}): UseSpacePanReturn
     if (isPanning.value) {
       isPanning.value = false
       
-      const graph = graphStore.graph
+      const graph = getGraph()
       if (graph && isSpacePressed.value) {
         const container = graph.container
         container.style.cursor = 'grab'
@@ -108,17 +130,23 @@ export function useSpacePan(options: UseSpacePanOptions = {}): UseSpacePanReturn
     isSpacePressed.value = false
     isPanning.value = false
     
-    const graph = graphStore.graph
+    const graph = getGraph()
     if (graph) {
       const container = graph.container
       container.style.cursor = 'default'
+      
+      // 恢复框选功能
+      if (wasRubberbandEnabled.value) {
+        graph.enableRubberband()
+        wasRubberbandEnabled.value = false
+      }
     }
     
     console.log('[useSpacePan] 已禁用')
   }
 
   const setupEventListeners = () => {
-    const graph = graphStore.graph
+    const graph = getGraph()
     if (!graph) {
       console.warn('[useSpacePan] Graph 实例不存在')
       return
@@ -137,7 +165,7 @@ export function useSpacePan(options: UseSpacePanOptions = {}): UseSpacePanReturn
   }
 
   const removeEventListeners = () => {
-    const graph = graphStore.graph
+    const graph = getGraph()
     if (!graph) return
 
     const container = graph.container
