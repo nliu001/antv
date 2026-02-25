@@ -136,7 +136,7 @@ export function useNodeDrop(options: UseNodeDropOptions = {}): UseNodeDropReturn
     if (graphStore.isInitialized) {
       enable()
     } else {
-      const unwatch = graphStore.$subscribe((mutation, state) => {
+      const unwatch = graphStore.$subscribe((_mutation, state) => {
         if (state.isInitialized) {
           enable()
           unwatch()

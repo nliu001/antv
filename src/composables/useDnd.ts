@@ -121,7 +121,7 @@ export function useDnd(options: UseDndOptions = {}): UseDndReturn {
       initDnd()
       setupDragEvents()
     } else {
-      const unwatch = graphStore.$subscribe((mutation, state) => {
+      const unwatch = graphStore.$subscribe((_mutation, state) => {
         if (state.isInitialized && !dnd.value) {
           initDnd()
           setupDragEvents()

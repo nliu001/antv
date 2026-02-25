@@ -39,8 +39,9 @@ export const DEFAULT_EXPAND_CONFIG: ExpandConfig = {
   // 位置调整阈值：避免微小偏移导致的容器抖动
   positionThreshold: 5,
 
-  // 防抖延迟：平衡响应速度和计算频率
-  debounceDelay: 100,
+  // 节流延迟：使用 throttle 保证固定频率更新，更流畅
+  // 值越小越流畅，但 CPU 占用越高
+  debounceDelay: 16,  // ~60fps
 
   // 默认启用自动扩容
   enabled: true

@@ -17,10 +17,11 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onBeforeUnmount, ref } from 'vue'
 import { Loading, CircleClose } from '@element-plus/icons-vue'
 import { useGraph } from '@/composables/useGraph'
 import { useGraphStore } from '@/stores/graphStore'
+import type { Ref } from 'vue'
 
 /**
  * Props 定义
@@ -32,32 +33,32 @@ interface Props {
   width?: string | number
   // 是否显示网格（默认：true）
   showGrid?: boolean
-  // 是否启用对齐线（默认：true）
-  enableSnapline?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
   height: '100%',
   width: '100%',
-  showGrid: true,
-  enableSnapline: true
+  showGrid: true
 })
 
 /**
  * Emits 定义
  */
 const emit = defineEmits<{
-  'graph-ready': [graph: any]
+  'graph-ready': [graph: unknown]
   'zoom-change': [zoom: number]
   'canvas-click': [event: MouseEvent]
 }>()
 
-// 使用 Graph Hook
-const { containerRef } = useGraph({
-  width: props.width,
-  height: props.height,
+// 容器引用 - 供模板绑定
+const containerRef: Ref<HTMLElement | null> = ref(null)
+
+// 使用 Graph Hook，传入容器引用
+useGraph({
+  width: typeof props.width === 'number' ? props.width : undefined,
+  height: typeof props.height === 'number' ? props.height : undefined,
   showGrid: props.showGrid,
-  enableSnapline: props.enableSnapline
+  container: containerRef
 })
 
 // 使用 Graph Store
@@ -86,7 +87,6 @@ const unwatchZoom = graphStore.$subscribe((mutation, state) => {
 })
 
 // 组件卸载时取消监听
-import { onBeforeUnmount } from 'vue'
 onBeforeUnmount(() => {
   unwatchZoom()
 })

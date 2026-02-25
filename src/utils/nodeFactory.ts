@@ -27,7 +27,7 @@ function getTimestamp(): string {
  * @param options 节点创建选项
  * @returns 节点配置对象
  */
-export function createDeviceNode(options: Partial<NodeCreateOptions> & { data: Partial<DeviceNodeData> }) {
+export function createDeviceNode(options: Partial<Omit<NodeCreateOptions, 'data'>> & { data: Partial<DeviceNodeData> }) {
   const timestamp = getTimestamp()
   const nodeId = options.id || generateId()
 
@@ -62,7 +62,7 @@ export function createDeviceNode(options: Partial<NodeCreateOptions> & { data: P
  * @param options 节点创建选项
  * @returns 节点配置对象
  */
-export function createSystemContainer(options: Partial<NodeCreateOptions> & { data: Partial<SystemNodeData> }) {
+export function createSystemContainer(options: Partial<Omit<NodeCreateOptions, 'data'>> & { data: Partial<SystemNodeData> }) {
   const timestamp = getTimestamp()
   const nodeId = options.id || generateId()
 

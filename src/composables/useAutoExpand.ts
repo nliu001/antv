@@ -1,6 +1,6 @@
 import { ref, onUnmounted } from 'vue'
 import type { Graph, Node } from '@antv/x6'
-import { debounce } from 'lodash-es'
+import { throttle } from 'lodash-es'
 import { calculateUnionBBox, isValidBBox } from '@/utils/bboxCalculator'
 import { DEFAULT_EXPAND_CONFIG, type ExpandConfig } from '@/config/containerConfig'
 import { NodeType } from '@/types/node'
@@ -135,8 +135,11 @@ export function useAutoExpand(initialGraph: Graph | null = null, config: Partial
         console.log(`[useAutoExpand] 容器位置保持不变: (${oldPos.x}, ${oldPos.y})`)
       }
 
-      // 9. 应用尺寸调整
-      container.resize(newWidth, newHeight)
+      // 9. 应用尺寸调整（使用过渡动画）
+      container.resize(newWidth, newHeight, { 
+        absolute: true,
+        silent: false 
+      })
       console.log(`[useAutoExpand] 容器尺寸调整: (${oldSize.width}, ${oldSize.height}) -> (${newWidth}, ${newHeight})`)
     } finally {
       isExpanding.value = false
@@ -144,11 +147,16 @@ export function useAutoExpand(initialGraph: Graph | null = null, config: Partial
   }
 
   /**
-   * 创建防抖的扩容函数
+   * 创建节流的扩容函数
    * 
-   * 防抖优化：减少频繁计算，提升性能
+   * 使用 throttle 替代 debounce，保证固定频率更新，避免卡顿感
+   * leading: true - 第一次调用立即执行
+   * trailing: true - 最后一次调用也会执行
    */
-  const debouncedExpand = debounce(expandContainer, expandConfig.debounceDelay)
+  const throttledExpand = throttle(expandContainer, expandConfig.debounceDelay, {
+    leading: true,
+    trailing: true
+  })
 
   /**
    * 设置 Graph 实例
@@ -185,7 +193,7 @@ export function useAutoExpand(initialGraph: Graph | null = null, config: Partial
         const parentData = parent.getData()
         // 仅处理系统容器
         if (parentData?.type === NodeType.SYSTEM) {
-          debouncedExpand(parent)
+          throttledExpand(parent)
         }
       }
     }
@@ -200,7 +208,7 @@ export function useAutoExpand(initialGraph: Graph | null = null, config: Partial
       if (parent && parent.isNode()) {
         const parentData = parent.getData()
         if (parentData?.type === NodeType.SYSTEM) {
-          debouncedExpand(parent)
+          throttledExpand(parent)
         }
       }
     }
@@ -223,7 +231,7 @@ export function useAutoExpand(initialGraph: Graph | null = null, config: Partial
     //   if (parent && parent.isNode()) {
     //     const parentData = parent.getData()
     //     if (parentData?.type === NodeType.SYSTEM) {
-    //       debouncedExpand(parent)
+    //       throttledExpand(parent)
     //     }
     //   }
     // }
@@ -241,8 +249,8 @@ export function useAutoExpand(initialGraph: Graph | null = null, config: Partial
     eventHandlers.forEach((cleanup) => cleanup())
     eventHandlers.length = 0
 
-    // 取消待执行的防抖函数
-    debouncedExpand.cancel()
+    // 取消待执行的节流函数
+    throttledExpand.cancel()
 
     console.log('[useAutoExpand] 自动扩容已禁用')
   }
@@ -253,8 +261,8 @@ export function useAutoExpand(initialGraph: Graph | null = null, config: Partial
    * @param container 容器节点
    */
   function manualExpand(container: Node) {
-    // 取消防抖，立即执行
-    debouncedExpand.cancel()
+    // 取消节流，立即执行
+    throttledExpand.cancel()
     expandContainer(container)
   }
 

@@ -36,7 +36,7 @@ export interface GraphState {
  * Graph 配置选项接口
  */
 export interface GraphOptions {
-  container: HTMLElement
+  container: HTMLElement | import('vue').Ref<HTMLElement | null>
   width?: number
   height?: number
   showGrid?: boolean

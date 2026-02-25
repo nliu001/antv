@@ -51,7 +51,8 @@ export function createGraphConfig(
       modifiers: ['ctrl', 'meta'],
       minScale: 0.2,
       maxScale: 3,
-      factor: 1.1
+      factor: 1.1,
+      zoomAtMousePosition: true,
     },
 
     panning: {

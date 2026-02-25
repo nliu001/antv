@@ -12,13 +12,11 @@ const keyboard = useKeyboardState()
 
 // 初始化 Dnd 拖拽功能
 const { startDrag } = useDnd({
-  scaled: true,
-  animation: true
+  scaled: true
 })
 
 // 初始化入组/出组检测
 useNodeDrop({
-  enterDelay: 200,
   leaveDelay: 100,
   leaveThreshold: 0.5,
   // ⭐ 传递 Ctrl 键状态检查函数
@@ -36,7 +34,7 @@ const handleStencilDragStart = (config: StencilItemConfig, event: DragEvent) => 
 /**
  * 处理物料项拖拽结束
  */
-const handleStencilDragEnd = (config: StencilItemConfig, event: DragEvent) => {
+const handleStencilDragEnd = (config: StencilItemConfig, _event: DragEvent) => {
   console.log('结束拖拽:', config.label)
 }
 </script>

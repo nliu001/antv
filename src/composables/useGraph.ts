@@ -3,7 +3,8 @@
  * @description 管理 Graph 实例的生命周期和初始化逻辑
  */
 
-import { ref, onMounted, onBeforeUnmount } from 'vue'
+import { ref, onMounted, onBeforeUnmount, isRef } from 'vue'
+import type { Ref } from 'vue'
 import { Graph } from '@antv/x6'
 import { ElMessage } from 'element-plus'
 import { createGraphConfig } from '@/utils/graphConfig'
@@ -11,6 +12,10 @@ import { useGraphStore } from '@/stores/graphStore'
 import { useAutoExpand } from '@/composables/useAutoExpand'
 import { useKeyboardState } from '@/composables/useKeyboardState'
 import { useNodeOutGroup } from '@/composables/useNodeOutGroup'
+import { usePlugins } from '@/composables/usePlugins'
+import { useDragVisual } from '@/composables/useDragVisual'
+import { useSpacePan } from '@/composables/useSpacePan'
+import { useAlignment } from '@/composables/useAlignment'
 import type { GraphOptions } from '@/types/graph'
 
 /**
@@ -32,7 +37,12 @@ function debounce<T extends (...args: any[]) => any>(fn: T, delay: number): T {
  */
 export function useGraph(options?: Partial<GraphOptions>) {
   const graphStore = useGraphStore()
-  const containerRef = ref<HTMLElement | null>(null)
+  
+  // 支持外部传入容器引用，或创建内部引用
+  const externalContainer = options?.container
+  const containerRef: Ref<HTMLElement | null> = isRef(externalContainer) 
+    ? externalContainer as Ref<HTMLElement | null>
+    : ref<HTMLElement | null>(externalContainer || null)
   const resizeObserver = ref<ResizeObserver | null>(null)
 
   // 初始化自动扩容 Composable
@@ -43,6 +53,24 @@ export function useGraph(options?: Partial<GraphOptions>) {
 
   // 初始化节点出组管理
   const nodeOutGroup = useNodeOutGroup(null, () => keyboardState.isCtrlPressed.value)
+
+  // 初始化插件管理
+  const plugins = usePlugins({
+    snapline: { enabled: true, tolerance: 10, resizing: true },
+    history: { enabled: true, stackSize: 50 },
+    selection: { enabled: true, multiple: true, rubberband: true, movable: true },
+    keyboard: { enabled: true, global: false },
+    clipboard: { enabled: true },
+  })
+
+  // 初始化拖拽视觉增强
+  useDragVisual()
+
+  // 初始化 Space+拖拽画布平移
+  useSpacePan()
+
+  // 初始化对齐分布功能
+  const alignment = useAlignment()
 
   /**
    * 初始化 Graph 实例
@@ -113,9 +141,13 @@ export function useGraph(options?: Partial<GraphOptions>) {
         autoExpand.resume()
       })
 
+      // 初始化插件（Snapline、History、Selection、Keyboard、Clipboard）
+      plugins.init()
+
       console.log('[useGraph] Graph 初始化成功')
       console.log('[useGraph] 自动扩容已启用')
       console.log('[useGraph] Ctrl 键出组功能已启用')
+      console.log('[useGraph] 插件已加载: Snapline、History、Selection、Keyboard、Clipboard')
     } catch (error) {
       console.error('[useGraph] Graph 初始化失败:', error)
       graphStore.setError(error as Error)
@@ -180,6 +212,8 @@ export function useGraph(options?: Partial<GraphOptions>) {
     graph: graphStore.graph,
     isInitialized: () => graphStore.isInitialized,
     isLoading: () => graphStore.isLoading,
-    error: () => graphStore.error
+    error: () => graphStore.error,
+    plugins,
+    alignment,
   }
 }
