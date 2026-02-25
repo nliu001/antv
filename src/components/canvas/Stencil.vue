@@ -32,8 +32,10 @@
               v-for="item in group.items"
               :key="item.id"
               :config="item"
+              :active-id="activeItemId"
               @drag-start="handleItemDragStart"
               @drag-end="handleItemDragEnd"
+              @click="handleItemClick"
             />
           </div>
         </el-collapse-item>
@@ -54,10 +56,12 @@ import type { StencilItemConfig } from '@/constants/stencil'
  */
 interface Props {
   groups?: typeof STENCIL_GROUPS
+  activeItemId?: string | null
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  groups: () => STENCIL_GROUPS
+  groups: () => STENCIL_GROUPS,
+  activeItemId: null
 })
 
 /**
@@ -66,6 +70,7 @@ const props = withDefaults(defineProps<Props>(), {
 interface Emits {
   (e: 'itemDragStart', config: StencilItemConfig, event: DragEvent): void
   (e: 'itemDragEnd', config: StencilItemConfig, event: DragEvent): void
+  (e: 'itemClick', config: StencilItemConfig): void
 }
 
 const emit = defineEmits<Emits>()
@@ -87,6 +92,13 @@ const handleItemDragStart = (config: StencilItemConfig, event: DragEvent) => {
  */
 const handleItemDragEnd = (config: StencilItemConfig, event: DragEvent) => {
   emit('itemDragEnd', config, event)
+}
+
+/**
+ * 物料项点击（进入快速放置模式）
+ */
+const handleItemClick = (config: StencilItemConfig) => {
+  emit('itemClick', config)
 }
 </script>
 
