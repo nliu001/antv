@@ -79,6 +79,27 @@
           <el-button :icon="RefreshRight" circle size="small" :disabled="!canRedo" @click="handleRedo" />
         </el-tooltip>
 
+        <!-- 分隔线 - 导出 -->
+        <div class="toolbar-divider"></div>
+
+        <!-- 导出下拉菜单 -->
+        <el-dropdown trigger="click" @command="handleExportCommand">
+          <el-button :icon="Download" circle size="small" title="导出图片" />
+          <template #dropdown>
+            <el-dropdown-menu>
+              <el-dropdown-item command="exportPNG">
+                <el-icon><Picture /></el-icon> 导出为 PNG
+              </el-dropdown-item>
+              <el-dropdown-item command="exportJPEG">
+                <el-icon><PictureFilled /></el-icon> 导出为 JPEG
+              </el-dropdown-item>
+              <el-dropdown-item command="exportSVG">
+                <el-icon><Document /></el-icon> 导出为 SVG
+              </el-dropdown-item>
+            </el-dropdown-menu>
+          </template>
+        </el-dropdown>
+
         <!-- 缩放比例显示 -->
         <div v-if="showZoomText" class="zoom-text">{{ zoomText }}</div>
       </div>
@@ -101,10 +122,11 @@
 
 <script setup lang="ts">
 import { computed, ref, onMounted, onBeforeUnmount } from 'vue'
-import { 
+import {
   ZoomIn, ZoomOut, FullScreen, Refresh,
   Operation, Back, Right, Top, Bottom, Switch, Minus,
-  RefreshLeft, RefreshRight, DCaret, CaretRight
+  RefreshLeft, RefreshRight, DCaret, CaretRight,
+  Download, Picture, PictureFilled, Document
 } from '@element-plus/icons-vue'
 import { useGraphStore } from '@/stores/graphStore'
 import { useAlignment } from '@/composables/useAlignment'
@@ -125,7 +147,13 @@ const props = withDefaults(defineProps<Props>(), {
   showZoomText: true
 })
 
-// 使用 Graph Store
+interface Emits {
+  'export-png': []
+  'export-jpeg': []
+  'export-svg': []
+}
+
+const emit = defineEmits<Emits>()
 const graphStore = useGraphStore()
 
 // 使用对齐功能
@@ -273,6 +301,20 @@ const handleRedo = () => {
   const graph = graphStore.graph
   if (graph) {
     graph.redo()
+  }
+}
+
+const handleExportCommand = (command: string) => {
+  switch (command) {
+    case 'exportPNG':
+      emit('export-png')
+      break
+    case 'exportJPEG':
+      emit('export-jpeg')
+      break
+    case 'exportSVG':
+      emit('export-svg')
+      break
   }
 }
 </script>

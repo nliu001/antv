@@ -7,6 +7,7 @@ import { useDnd } from '@/composables/useDnd'
 import { useNodeDrop } from '@/composables/useNodeDrop'
 import { useKeyboardState } from '@/composables/useKeyboardState'
 import { useQuickPlacement } from '@/composables/useQuickPlacement'
+import { useGraphExport } from '@/composables/useGraphExport'
 import type { StencilItemConfig } from '@/constants/stencil'
 
 // 初始化键盘状态管理
@@ -27,6 +28,9 @@ useNodeDrop({
 
 // 初始化快速放置模式
 const quickPlacement = useQuickPlacement()
+
+// 初始化导出功能
+const graphExport = useGraphExport()
 
 /**
  * 处理物料项拖拽开始
@@ -56,6 +60,27 @@ const handleStencilItemClick = (config: StencilItemConfig) => {
     quickPlacement.startPlacement(config)
   }
 }
+
+/**
+ * 处理导出为 PNG
+ */
+const handleExportPNG = () => {
+  graphExport.exportAsPNG()
+}
+
+/**
+ * 处理导出为 JPEG
+ */
+const handleExportJPEG = () => {
+  graphExport.exportAsJPEG()
+}
+
+/**
+ * 处理导出为 SVG
+ */
+const handleExportSVG = () => {
+  graphExport.exportAsSVG()
+}
 </script>
 
 <template>
@@ -71,7 +96,13 @@ const handleStencilItemClick = (config: StencilItemConfig) => {
     <!-- 画布区域 -->
     <div class="canvas-area">
       <GraphCanvas />
-      <Toolbar position="top-right" :show-zoom-text="true" />
+      <Toolbar 
+        position="top-right" 
+        :show-zoom-text="true"
+        @export-png="handleExportPNG"
+        @export-jpeg="handleExportJPEG"
+        @export-svg="handleExportSVG"
+      />
     </div>
 
     <!-- 快速放置鼠标跟随预览 -->

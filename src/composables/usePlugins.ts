@@ -1,5 +1,5 @@
 import { onBeforeUnmount, toRaw } from 'vue'
-import { Graph, Snapline, History, Selection, Keyboard, Clipboard, Transform } from '@antv/x6'
+import { Graph, Snapline, History, Selection, Keyboard, Clipboard, Transform, Export } from '@antv/x6'
 import type { Node } from '@antv/x6'
 import { useGraphStore } from '@/stores/graphStore'
 import { NodeType, type SystemNodeData } from '@/types/node'
@@ -253,6 +253,9 @@ export function usePlugins(options: UsePluginsOptions = {}): UsePluginsReturn {
       })
     )
     console.log('[usePlugins] Transform 插件已启用（仅容器节点可调整大小）')
+
+    graph.use(new Export())
+    console.log('[usePlugins] Export 插件已启用')
   }
 
   const setupKeyboardShortcuts = (graph: Graph) => {
