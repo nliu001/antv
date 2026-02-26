@@ -1,6 +1,8 @@
 import { onBeforeUnmount, toRaw } from 'vue'
-import { Graph, Snapline, History, Selection, Keyboard, Clipboard } from '@antv/x6'
+import { Graph, Snapline, History, Selection, Keyboard, Clipboard, Transform } from '@antv/x6'
+import type { Node } from '@antv/x6'
 import { useGraphStore } from '@/stores/graphStore'
+import { NodeType, type SystemNodeData } from '@/types/node'
 
 export interface UsePluginsOptions {
   snapline?: {
@@ -207,6 +209,7 @@ export function usePlugins(options: UsePluginsOptions = {}): UsePluginsReturn {
           rubberband: selectionOptions.rubberband,
           movable: selectionOptions.movable,
           showNodeSelectionBox: selectionOptions.showNodeSelectionBox,
+          pointerEvents: 'none',
         })
       )
       console.log('[usePlugins] Selection 插件已启用')
@@ -230,6 +233,26 @@ export function usePlugins(options: UsePluginsOptions = {}): UsePluginsReturn {
       )
       console.log('[usePlugins] Clipboard 插件已启用')
     }
+
+    graph.use(
+      new Transform({
+        resizing: {
+          enabled: (node: Node) => {
+            const nodeData = node.getData<SystemNodeData>()
+            return nodeData?.type === NodeType.SYSTEM
+          },
+          minWidth: 200,
+          minHeight: 150,
+          orthogonal: true,
+          restrict: false,
+          autoScroll: true,
+          preserveAspectRatio: false,
+          allowReverse: true,
+        },
+        rotating: false,
+      })
+    )
+    console.log('[usePlugins] Transform 插件已启用（仅容器节点可调整大小）')
   }
 
   const setupKeyboardShortcuts = (graph: Graph) => {

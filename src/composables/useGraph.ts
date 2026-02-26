@@ -148,6 +148,15 @@ export function useGraph(options?: Partial<GraphOptions>) {
       // 初始化插件（Snapline、History、Selection、Keyboard、Clipboard）
       plugins.init()
 
+      // 监听手动调整大小事件，暂停/恢复自动扩容
+      graph.on('node:resize', () => {
+        autoExpand.pause()
+      })
+
+      graph.on('node:resized', () => {
+        autoExpand.resume()
+      })
+
       console.log('[useGraph] Graph 初始化成功')
       console.log('[useGraph] 自动扩容已启用')
       console.log('[useGraph] Ctrl 键出组功能已启用')
