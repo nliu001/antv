@@ -49,17 +49,21 @@ export function useGraphExport() {
 
     try {
       const fileName = options.fileName || generateFileName('png')
+      
+      const container = document.querySelector('.graph-canvas-container') as HTMLElement
+      const width = options.width ?? container?.offsetWidth ?? 800
+      const height = options.height ?? container?.offsetHeight ?? 600
+
       const exportOptions: any = {
         backgroundColor: options.backgroundColor || '#ffffff',
-        padding: options.padding ?? 20,
         quality: options.quality || 0.92,
         copyStyles: options.copyStyles !== false,
         serializeImages: options.serializeImages !== false,
-        preserveDimensions: options.preserveDimensions ?? true,
+        width,
+        height,
       }
 
-      if (options.width !== undefined) exportOptions.width = options.width
-      if (options.height !== undefined) exportOptions.height = options.height
+      if (options.padding !== undefined) exportOptions.padding = options.padding
       if (options.ratio !== undefined) exportOptions.ratio = options.ratio
 
       console.log('[useGraphExport] PNG 导出配置:', exportOptions)
@@ -89,17 +93,21 @@ export function useGraphExport() {
 
     try {
       const fileName = options.fileName || generateFileName('jpeg')
+      
+      const container = document.querySelector('.graph-canvas-container') as HTMLElement
+      const width = options.width ?? container?.offsetWidth ?? 800
+      const height = options.height ?? container?.offsetHeight ?? 600
+
       const exportOptions: any = {
         backgroundColor: options.backgroundColor || '#ffffff',
-        padding: options.padding ?? 20,
         quality: options.quality || 0.92,
         copyStyles: options.copyStyles !== false,
         serializeImages: options.serializeImages !== false,
-        preserveDimensions: options.preserveDimensions ?? true,
+        width,
+        height,
       }
 
-      if (options.width !== undefined) exportOptions.width = options.width
-      if (options.height !== undefined) exportOptions.height = options.height
+      if (options.padding !== undefined) exportOptions.padding = options.padding
       if (options.ratio !== undefined) exportOptions.ratio = options.ratio
 
       console.log('[useGraphExport] JPEG 导出配置:', exportOptions)
@@ -129,10 +137,15 @@ export function useGraphExport() {
 
     try {
       const fileName = options.fileName || generateFileName('svg')
+      
+      const container = document.querySelector('.graph-canvas-container') as HTMLElement
+      const width = options.width ?? container?.offsetWidth ?? 800
+      const height = options.height ?? container?.offsetHeight ?? 600
+
       const exportOptions: any = {
         copyStyles: options.copyStyles !== false,
         serializeImages: options.serializeImages !== false,
-        preserveDimensions: options.preserveDimensions ?? true,
+        preserveDimensions: { width, height },
       }
 
       console.log('[useGraphExport] SVG 导出配置:', exportOptions)
