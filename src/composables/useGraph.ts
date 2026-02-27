@@ -17,6 +17,7 @@ import { useDragVisual } from '@/composables/useDragVisual'
 import { useSpacePan } from '@/composables/useSpacePan'
 import { useAlignment } from '@/composables/useAlignment'
 import { useEmbeddingPreview } from '@/composables/useEmbeddingPreview'
+import { nodeApi } from '@/services/api'
 import type { GraphOptions } from '@/types/graph'
 
 /**
@@ -169,6 +170,52 @@ export function useGraph(options?: Partial<GraphOptions>) {
           }
         }
       )
+
+      graph.on('node:added', async ({ node }) => {
+        console.log('[useGraph] 节点已添加:', node.id)
+      })
+
+      graph.on('node:moved', async ({ node }) => {
+        const position = node.position()
+        console.log('[useGraph] 节点已移动:', node.id, position)
+        try {
+          await nodeApi.update({
+            id: node.id,
+            graphId: 'current',
+            x: position.x,
+            y: position.y,
+          })
+        } catch (error) {
+          console.warn('[useGraph] 节点位置同步失败:', error)
+        }
+      })
+
+      graph.on('node:resized', async ({ node }) => {
+        const size = node.size()
+        const position = node.position()
+        console.log('[useGraph] 节点已调整大小:', node.id, size)
+        try {
+          await nodeApi.update({
+            id: node.id,
+            graphId: 'current',
+            x: position.x,
+            y: position.y,
+            width: size.width,
+            height: size.height,
+          })
+        } catch (error) {
+          console.warn('[useGraph] 节点大小同步失败:', error)
+        }
+      })
+
+      graph.on('node:removed', async ({ node }) => {
+        console.log('[useGraph] 节点已删除:', node.id)
+        try {
+          await nodeApi.delete(node.id, 'current')
+        } catch (error) {
+          console.warn('[useGraph] 节点删除同步失败:', error)
+        }
+      })
 
       console.log('[useGraph] Graph 初始化成功')
       console.log('[useGraph] 自动扩容已启用')

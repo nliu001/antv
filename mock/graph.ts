@@ -31,10 +31,14 @@ export default [
       const { id } = query
       const graph = graphList.find(g => g.id === id)
       if (graph) {
+        const graphNodes = nodeList.filter(n => n.graphId === id)
         return {
           code: 200,
           message: 'success',
-          data: graph,
+          data: {
+            ...graph,
+            nodes: graphNodes,
+          },
         }
       }
       return {

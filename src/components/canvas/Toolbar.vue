@@ -93,6 +93,35 @@
           />
         </el-tooltip>
 
+        <!-- 分隔线 -->
+        <div class="toolbar-divider"></div>
+
+        <!-- 保存画布按钮 -->
+        <el-tooltip content="保存画布" placement="left">
+          <el-button 
+            :icon="FolderOpened" 
+            circle 
+            size="small" 
+            :loading="isSavingGraph"
+            type="primary"
+            @click="handleSaveGraph" 
+          />
+        </el-tooltip>
+
+        <!-- 加载画布按钮 -->
+        <el-tooltip content="加载画布" placement="left">
+          <el-button 
+            :icon="Folder" 
+            circle 
+            size="small" 
+            :loading="isLoadingGraph"
+            @click="handleLoadGraph" 
+          />
+        </el-tooltip>
+
+        <!-- 分隔线 -->
+        <div class="toolbar-divider"></div>
+
         <!-- 导出下拉菜单 -->
         <el-dropdown trigger="click" @command="handleExportCommand">
           <el-button :icon="Download" circle size="small" title="导出图片" />
@@ -148,7 +177,7 @@ import {
   Operation, Back, Right, Top, Bottom, Switch, Minus,
   RefreshLeft, RefreshRight, DCaret, CaretRight,
   Download, Picture, PictureFilled, Document,
-  Lock, Unlock, Setting
+  Lock, Unlock, Setting, FolderOpened, Folder
 } from '@element-plus/icons-vue'
 import { useGraphStore } from '@/stores/graphStore'
 import { useAlignment } from '@/composables/useAlignment'
@@ -175,15 +204,27 @@ interface Emits {
   'export-svg': []
   'toggle-lock': []
   'mock-test': []
+  'save-graph': []
+  'load-graph': []
 }
 
 const emit = defineEmits<Emits>()
 const graphStore = useGraphStore()
 
 const isLocked = computed(() => graphStore.isLocked)
+const isSavingGraph = ref(false)
+const isLoadingGraph = ref(false)
 
 const handleToggleLock = () => {
   emit('toggle-lock')
+}
+
+const handleSaveGraph = () => {
+  emit('save-graph')
+}
+
+const handleLoadGraph = () => {
+  emit('load-graph')
 }
 
 const handleMockTest = () => {
