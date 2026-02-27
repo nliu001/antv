@@ -1,11 +1,33 @@
+/**
+ * Mock API - 图形设计器后端服务模拟
+ * @description 模拟后端 API 接口，用于开发环境测试
+ */
+
 import { MockMethod } from 'vite-plugin-mock'
 import Mock from 'mockjs'
 
 const Random = Mock.Random
 
+/**
+ * 图形数据存储
+ * @description 模拟数据库中的图形表
+ */
 const graphList: any[] = []
+
+/**
+ * 节点数据存储
+ * @description 模拟数据库中的节点表
+ */
 const nodeList: any[] = []
 
+/**
+ * 获取图形列表
+ * @description 分页获取所有图形
+ * @param query - 查询参数
+ * @param query.page - 页码（默认 1）
+ * @param query.pageSize - 每页数量（默认 10）
+ * @returns 分页后的图形列表
+ */
 function getGraphList(query: any) {
   const { page = 1, pageSize = 10 } = query
   return {
@@ -20,6 +42,13 @@ function getGraphList(query: any) {
   }
 }
 
+/**
+ * 根据 ID 获取图形详情
+ * @description 获取指定图形的完整数据，包含所有关联节点
+ * @param query - 查询参数
+ * @param query.id - 图形 ID
+ * @returns 图形详情（包含节点列表）或 404 错误
+ */
 function getGraphById(query: any) {
   const { id } = query
   const graph = graphList.find(g => g.id === id)
@@ -41,6 +70,17 @@ function getGraphById(query: any) {
   }
 }
 
+/**
+ * 保存图形
+ * @description 创建新图形或更新已有图形
+ * @param body - 图形数据
+ * @param body.id - 图形 ID（更新时必填）
+ * @param body.name - 图形名称
+ * @param body.description - 图形描述
+ * @param body.nodes - 节点列表
+ * @param body.edges - 边列表
+ * @returns 保存后的图形数据
+ */
 function saveGraph(body: any) {
   const { id, name, description, nodes, edges } = body
   const now = new Date().toISOString()
@@ -82,6 +122,13 @@ function saveGraph(body: any) {
   }
 }
 
+/**
+ * 删除图形
+ * @description 根据 ID 删除指定图形
+ * @param query - 查询参数
+ * @param query.id - 图形 ID
+ * @returns 成功返回 200，图形不存在返回 404
+ */
 function deleteGraph(query: any) {
   const { id } = query
   const index = graphList.findIndex(g => g.id === id)
@@ -100,6 +147,11 @@ function deleteGraph(query: any) {
   }
 }
 
+/**
+ * 获取设备模板列表
+ * @description 获取所有可用的设备节点模板
+ * @returns 设备模板列表（路由器、交换机、服务器、防火墙、存储设备）
+ */
 function getDeviceTemplates() {
   return {
     code: 200,
@@ -154,6 +206,11 @@ function getDeviceTemplates() {
   }
 }
 
+/**
+ * 获取系统容器模板列表
+ * @description 获取所有可用的系统容器节点模板
+ * @returns 系统容器模板列表（网络区域、数据中心、云区域）
+ */
 function getSystemTemplates() {
   return {
     code: 200,
@@ -190,6 +247,22 @@ function getSystemTemplates() {
   }
 }
 
+/**
+ * 保存节点
+ * @description 创建新节点或更新已有节点
+ * @param body - 节点数据
+ * @param body.graphId - 所属图形 ID
+ * @param body.id - 节点 ID（更新时必填）
+ * @param body.type - 节点类型（device/system）
+ * @param body.x - X 坐标
+ * @param body.y - Y 坐标
+ * @param body.width - 宽度
+ * @param body.height - 高度
+ * @param body.label - 标签
+ * @param body.data - 自定义数据
+ * @param body.parentId - 父节点 ID
+ * @returns 保存后的节点数据
+ */
 function saveNode(body: any) {
   const { graphId, id, type, x, y, width, height, label, data, parentId } = body
   const now = new Date().toISOString()
@@ -239,6 +312,21 @@ function saveNode(body: any) {
   }
 }
 
+/**
+ * 更新节点
+ * @description 更新指定节点的属性（部分更新）
+ * @param body - 更新数据
+ * @param body.id - 节点 ID（必填）
+ * @param body.graphId - 所属图形 ID（必填）
+ * @param body.x - X 坐标（可选）
+ * @param body.y - Y 坐标（可选）
+ * @param body.width - 宽度（可选）
+ * @param body.height - 高度（可选）
+ * @param body.label - 标签（可选）
+ * @param body.data - 自定义数据（可选）
+ * @param body.parentId - 父节点 ID（可选）
+ * @returns 更新后的节点数据或 404 错误
+ */
 function updateNode(body: any) {
   const { id, graphId, x, y, width, height, label, data, parentId } = body
   const node = nodeList.find(n => n.id === id && n.graphId === graphId)
@@ -270,6 +358,14 @@ function updateNode(body: any) {
   }
 }
 
+/**
+ * 删除节点
+ * @description 根据 ID 删除指定节点
+ * @param query - 查询参数
+ * @param query.id - 节点 ID
+ * @param query.graphId - 所属图形 ID
+ * @returns 成功返回 200，节点不存在返回 404
+ */
 function deleteNode(query: any) {
   const { id, graphId } = query
   const index = nodeList.findIndex(n => n.id === id && n.graphId === graphId)
@@ -289,6 +385,10 @@ function deleteNode(query: any) {
   }
 }
 
+/**
+ * Mock API 路由配置
+ * @description 定义所有模拟 API 接口的路由、方法和处理函数
+ */
 export default [
   {
     url: '/api/graph/list',
