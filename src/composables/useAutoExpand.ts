@@ -136,12 +136,16 @@ export function useAutoExpand(initialGraph: Graph | null = null, config: Partial
       if (isExpanding.value) return
 
       if (movingContainerId.value) {
-        let currentAncestor: Node | null = node as Node | null
-        while (currentAncestor) {
-          if (currentAncestor.id === movingContainerId.value) {
-            return
+        if (node.id === movingContainerId.value) {
+          // 节点本身是正在移动的容器，允许触发其父容器扩容
+        } else {
+          let currentAncestor: Node | null = node.getParent() as Node | null
+          while (currentAncestor) {
+            if (currentAncestor.id === movingContainerId.value) {
+              return
+            }
+            currentAncestor = currentAncestor.getParent() as Node | null
           }
-          currentAncestor = currentAncestor.getParent() as Node | null
         }
       }
 
@@ -154,12 +158,16 @@ export function useAutoExpand(initialGraph: Graph | null = null, config: Partial
       if (isExpanding.value) return
 
       if (movingContainerId.value) {
-        let currentAncestor: Node | null = node as Node | null
-        while (currentAncestor) {
-          if (currentAncestor.id === movingContainerId.value) {
-            return
+        if (node.id === movingContainerId.value) {
+          // 节点本身是正在移动的容器，允许触发其父容器扩容
+        } else {
+          let currentAncestor: Node | null = node.getParent() as Node | null
+          while (currentAncestor) {
+            if (currentAncestor.id === movingContainerId.value) {
+              return
+            }
+            currentAncestor = currentAncestor.getParent() as Node | null
           }
-          currentAncestor = currentAncestor.getParent() as Node | null
         }
       }
 
