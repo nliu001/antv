@@ -99,6 +99,11 @@ export function useDnd(options: UseDndOptions = {}): UseDndReturn {
       return
     }
 
+    if (graphStore.isLocked) {
+      console.warn('[useDnd] 画布已锁定，禁止添加新节点')
+      return
+    }
+
     try {
       currentDragConfig.value = config
       const nodeData = config.createData()

@@ -43,6 +43,11 @@ export function useQuickPlacement(): UseQuickPlacementReturn {
     const graph = getGraph()
     if (!graph) return
 
+    if (graphStore.isLocked) {
+      console.warn('[useQuickPlacement] 画布已锁定，禁止添加新节点')
+      return
+    }
+
     // 将屏幕坐标转换为画布坐标
     const canvasPoint = graph.clientToLocal(clientX, clientY)
     

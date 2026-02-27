@@ -320,6 +320,10 @@ export const useGraphStore = defineStore('graph', {
 
       this.isLocked = true
       
+      this.graph.getNodes().forEach(node => {
+        node.setProp('movable', false)
+      })
+
       ;(this.graph as any).disableSelectionMovable()
       this.graph.disableClipboard()
       this.graph.disableHistory()
@@ -336,6 +340,10 @@ export const useGraphStore = defineStore('graph', {
 
       this.isLocked = false
       
+      this.graph.getNodes().forEach(node => {
+        node.setProp('movable', true)
+      })
+
       ;(this.graph as any).enableSelectionMovable()
       this.graph.enableClipboard()
       this.graph.enableHistory()
