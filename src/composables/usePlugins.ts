@@ -276,6 +276,8 @@ export function usePlugins(options: UsePluginsOptions = {}): UsePluginsReturn {
     })
 
     graph.bindKey(['delete', 'backspace'], () => {
+      if (graphStore.isLocked) return
+      
       const cells = graph.getSelectedCells()
       if (cells.length > 0) {
         graph.removeCells(cells)
