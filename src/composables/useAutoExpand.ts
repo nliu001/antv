@@ -91,19 +91,83 @@ export function useAutoExpand(initialGraph: Graph | null = null, config: Partial
 
   function expandAllAncestors(node: Node) {
     if (!graph || !expandConfig.enabled) return
-    if (isExpanding.value) return
     if (isPaused.value) return
 
+    const ancestorsToExpand: Node[] = []
     let currentAncestor: Node | null = node.getParent() as Node | null
     while (currentAncestor) {
       const ancestorData = currentAncestor.getData()
       if (ancestorData?.type === NodeType.SYSTEM) {
         if (movingContainerId.value !== currentAncestor.id) {
-          throttledExpand(currentAncestor)
+          ancestorsToExpand.push(currentAncestor)
         }
       }
       currentAncestor = currentAncestor.getParent() as Node | null
     }
+
+    for (let i = ancestorsToExpand.length - 1; i >= 0; i--) {
+      expandContainerDirect(ancestorsToExpand[i])
+    }
+  }
+
+  function expandContainerDirect(container: Node) {
+    if (!graph || !expandConfig.enabled) return
+    if (isPaused.value) return
+    if (movingContainerId.value === container.id) return
+
+    const oldPos = container.getPosition()
+    const oldSize = container.getSize()
+
+    const children = container.getChildren()
+    if (!children || children.length === 0) {
+      container.resize(expandConfig.minWidth, expandConfig.minHeight)
+      return
+    }
+
+    const childNodes = children.filter((child) => child.isNode()) as Node[]
+    if (childNodes.length === 0) {
+      container.resize(expandConfig.minWidth, expandConfig.minHeight)
+      return
+    }
+
+    const unionBBox = calculateUnionBBox(childNodes, graph)
+    if (!isValidBBox(unionBBox)) {
+      return
+    }
+
+    const childWithPaddingX = unionBBox.x - expandConfig.padding
+    const childWithPaddingY = unionBBox.y - expandConfig.padding
+    
+    const newX = Math.min(oldPos.x, childWithPaddingX)
+    const newY = Math.min(oldPos.y, childWithPaddingY)
+
+    const oldRight = oldPos.x + oldSize.width
+    const oldBottom = oldPos.y + oldSize.height
+    
+    const childRight = unionBBox.x + unionBBox.width + expandConfig.padding
+    const childBottom = unionBBox.y + unionBBox.height + expandConfig.padding
+    
+    const newRight = Math.max(oldRight, childRight)
+    const newBottom = Math.max(oldBottom, childBottom)
+
+    let newWidth = newRight - newX
+    let newHeight = newBottom - newY
+    
+    newWidth = Math.max(newWidth, expandConfig.minWidth)
+    newHeight = Math.max(newHeight, expandConfig.minHeight)
+
+    const needMoveLeft = newX < oldPos.x
+    const needMoveUp = newY < oldPos.y
+    const positionChanged = needMoveLeft || needMoveUp
+
+    if (positionChanged) {
+      container.setPosition(newX, newY)
+    }
+
+    container.resize(newWidth, newHeight, { 
+      absolute: true,
+      silent: false 
+    })
   }
 
   function setGraph(newGraph: Graph) {
