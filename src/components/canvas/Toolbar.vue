@@ -451,7 +451,7 @@ const handleExportCommand = (command: string) => {
 .shortcuts-list {
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 30px;
 }
 
 .shortcut-item {
