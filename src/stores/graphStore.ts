@@ -235,7 +235,6 @@ export const useGraphStore = defineStore('graph', {
       })
 
       const node = this.graph.addNode(nodeConfig)
-      console.log('[GraphStore] Device node added:', node.id)
       return node
     },
 
@@ -259,7 +258,6 @@ export const useGraphStore = defineStore('graph', {
       })
 
       const node = this.graph.addNode(nodeConfig)
-      console.log('[GraphStore] System container added:', node.id)
       return node
     },
 
@@ -273,7 +271,6 @@ export const useGraphStore = defineStore('graph', {
       const node = this.graph.getCellById(nodeId)
       if (node) {
         this.graph.removeNode(nodeId)
-        console.log('[GraphStore] Node removed:', nodeId)
       }
     },
 
@@ -307,7 +304,6 @@ export const useGraphStore = defineStore('graph', {
       const node = this.graph.getCellById(nodeId) as Node
       if (node) {
         node.setData({ ...node.getData(), ...data, updatedAt: new Date().toISOString() })
-        console.log('[GraphStore] Node data updated:', nodeId)
       }
     },
 
@@ -327,8 +323,6 @@ export const useGraphStore = defineStore('graph', {
       this.graph.getNodes().forEach(node => {
         node.setData({ _locked: true }, { silent: true })
       })
-
-      console.log('[GraphStore] 画布已锁定（节点不可移动，画布可平移）')
     },
 
     /**
@@ -347,8 +341,6 @@ export const useGraphStore = defineStore('graph', {
       this.graph.getNodes().forEach(node => {
         node.setData({ _locked: false }, { silent: true })
       })
-
-      console.log('[GraphStore] 画布已解锁')
     },
 
     /**

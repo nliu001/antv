@@ -137,12 +137,10 @@ export function useGraph(options?: Partial<GraphOptions>) {
 
       // 监听 Ctrl 键状态变化
       keyboardState.onCtrlPress(() => {
-        console.log('[useGraph] Ctrl 键按下，暂停扩容')
         autoExpand.pause()
       })
 
       keyboardState.onCtrlRelease(() => {
-        console.log('[useGraph] Ctrl 键松开，恢复扩容')
         autoExpand.resume()
       })
 
@@ -162,22 +160,15 @@ export function useGraph(options?: Partial<GraphOptions>) {
         () => graphStore.isLocked,
         (isLocked) => {
           if (isLocked) {
-            console.log('[useGraph] 画布已锁定，暂停自动扩容')
             autoExpand.pause()
           } else {
-            console.log('[useGraph] 画布已解锁，恢复自动扩容')
             autoExpand.resume()
           }
         }
       )
 
-      graph.on('node:added', async ({ node }) => {
-        console.log('[useGraph] 节点已添加:', node.id)
-      })
-
       graph.on('node:moved', async ({ node }) => {
         const position = node.position()
-        console.log('[useGraph] 节点已移动:', node.id, position)
         try {
           await nodeApi.update({
             id: node.id,
@@ -186,14 +177,13 @@ export function useGraph(options?: Partial<GraphOptions>) {
             y: position.y,
           })
         } catch (error) {
-          console.warn('[useGraph] 节点位置同步失败:', error)
+          console.warn('[API] 节点位置同步失败:', error)
         }
       })
 
       graph.on('node:resized', async ({ node }) => {
         const size = node.size()
         const position = node.position()
-        console.log('[useGraph] 节点已调整大小:', node.id, size)
         try {
           await nodeApi.update({
             id: node.id,
@@ -204,23 +194,18 @@ export function useGraph(options?: Partial<GraphOptions>) {
             height: size.height,
           })
         } catch (error) {
-          console.warn('[useGraph] 节点大小同步失败:', error)
+          console.warn('[API] 节点大小同步失败:', error)
         }
       })
 
       graph.on('node:removed', async ({ node }) => {
-        console.log('[useGraph] 节点已删除:', node.id)
         try {
           await nodeApi.delete(node.id, 'current')
         } catch (error) {
-          console.warn('[useGraph] 节点删除同步失败:', error)
+          console.warn('[API] 节点删除同步失败:', error)
         }
       })
 
-      console.log('[useGraph] Graph 初始化成功')
-      console.log('[useGraph] 自动扩容已启用')
-      console.log('[useGraph] Ctrl 键出组功能已启用')
-      console.log('[useGraph] 插件已加载: Snapline、History、Selection、Keyboard、Clipboard')
     } catch (error) {
       console.error('[useGraph] Graph 初始化失败:', error)
       graphStore.setError(error as Error)
@@ -235,9 +220,8 @@ export function useGraph(options?: Partial<GraphOptions>) {
     if (graphStore.graph && containerRef.value) {
       const { clientWidth, clientHeight } = containerRef.value
       graphStore.graph.resize(clientWidth, clientHeight)
-      console.log('[useGraph] 画布尺寸已调整:', clientWidth, clientHeight)
     }
-  }, 150) // 防抖延迟 150ms（与容器扩容保持一致）
+  }, 150)
 
   /**
    * 初始化容器尺寸监听
@@ -263,7 +247,6 @@ export function useGraph(options?: Partial<GraphOptions>) {
     // 销毁 Graph 实例
     if (graphStore.graph) {
       graphStore.graph.dispose()
-      console.log('[useGraph] Graph 实例已销毁')
     }
 
     // 重置 Store

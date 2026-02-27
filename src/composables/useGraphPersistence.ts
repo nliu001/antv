@@ -73,14 +73,14 @@ export function useGraphPersistence() {
 
       if (response.code === 200) {
         currentGraphId.value = response.data.id
-        console.log('[useGraphPersistence] 画布保存成功:', response.data.id)
+        console.log('[API] 画布保存成功:', response.data.id)
         ElMessage.success('画布保存成功')
         return response.data
       } else {
         throw new Error(response.message)
       }
     } catch (error: any) {
-      console.error('[useGraphPersistence] 画布保存失败:', error)
+      console.error('[API] 画布保存失败:', error)
       ElMessage.error('画布保存失败: ' + error.message)
       return null
     } finally {
@@ -136,14 +136,14 @@ export function useGraphPersistence() {
           })
         }
 
-        console.log('[useGraphPersistence] 画布加载成功:', graphId)
+        console.log('[API] 画布加载成功:', graphId)
         ElMessage.success('画布加载成功')
         return true
       } else {
         throw new Error(response.message || '画布不存在')
       }
     } catch (error: any) {
-      console.error('[useGraphPersistence] 画布加载失败:', error)
+      console.error('[API] 画布加载失败:', error)
       ElMessage.error('画布加载失败: ' + error.message)
       return false
     } finally {
@@ -153,7 +153,6 @@ export function useGraphPersistence() {
 
   const saveNode = async (node: Node) => {
     if (!currentGraphId.value) {
-      console.warn('[useGraphPersistence] 未加载画布，跳过节点保存')
       return null
     }
 
@@ -176,13 +175,13 @@ export function useGraphPersistence() {
       })
 
       if (response.code === 200) {
-        console.log('[useGraphPersistence] 节点保存成功:', node.id)
+        console.log('[API] 节点保存成功:', node.id)
         return response.data
       } else {
         throw new Error(response.message)
       }
     } catch (error: any) {
-      console.error('[useGraphPersistence] 节点保存失败:', error)
+      console.error('[API] 节点保存失败:', error)
       return null
     }
   }
@@ -197,7 +196,6 @@ export function useGraphPersistence() {
     parentId: string
   }>) => {
     if (!currentGraphId.value) {
-      console.warn('[useGraphPersistence] 未加载画布，跳过节点更新')
       return null
     }
 
@@ -209,20 +207,19 @@ export function useGraphPersistence() {
       })
 
       if (response.code === 200) {
-        console.log('[useGraphPersistence] 节点更新成功:', nodeId)
+        console.log('[API] 节点更新成功:', nodeId)
         return response.data
       } else {
         throw new Error(response.message)
       }
     } catch (error: any) {
-      console.error('[useGraphPersistence] 节点更新失败:', error)
+      console.error('[API] 节点更新失败:', error)
       return null
     }
   }
 
   const deleteNode = async (nodeId: string) => {
     if (!currentGraphId.value) {
-      console.warn('[useGraphPersistence] 未加载画布，跳过节点删除')
       return false
     }
 
@@ -230,13 +227,13 @@ export function useGraphPersistence() {
       const response = await nodeApi.delete(nodeId, currentGraphId.value)
 
       if (response.code === 200) {
-        console.log('[useGraphPersistence] 节点删除成功:', nodeId)
+        console.log('[API] 节点删除成功:', nodeId)
         return true
       } else {
         throw new Error(response.message)
       }
     } catch (error: any) {
-      console.error('[useGraphPersistence] 节点删除失败:', error)
+      console.error('[API] 节点删除失败:', error)
       return false
     }
   }
@@ -246,7 +243,6 @@ export function useGraphPersistence() {
       graph.value.clearCells()
     }
     currentGraphId.value = null
-    console.log('[useGraphPersistence] 画布已清空')
   }
 
   return {
