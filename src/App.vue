@@ -9,6 +9,7 @@ import { useKeyboardState } from '@/composables/useKeyboardState'
 import { useQuickPlacement } from '@/composables/useQuickPlacement'
 import { useGraphExport } from '@/composables/useGraphExport'
 import { useGraphStore } from '@/stores/graphStore'
+import { useMockTest } from '@/composables/useMockTest'
 import type { StencilItemConfig } from '@/constants/stencil'
 
 // 初始化键盘状态管理
@@ -16,6 +17,9 @@ const keyboard = useKeyboardState()
 
 // 初始化 Graph Store
 const graphStore = useGraphStore()
+
+// 初始化 Mock 测试
+const mockTest = useMockTest()
 
 // 初始化 Dnd 拖拽功能
 const { startDrag } = useDnd({
@@ -92,6 +96,13 @@ const handleExportSVG = () => {
 const handleToggleLock = () => {
   graphStore.toggleLock()
 }
+
+/**
+ * 处理 Mock 测试
+ */
+const handleMockTest = async () => {
+  await mockTest.runAllTests()
+}
 </script>
 
 <template>
@@ -114,6 +125,7 @@ const handleToggleLock = () => {
         @export-jpeg="handleExportJPEG"
         @export-svg="handleExportSVG"
         @toggle-lock="handleToggleLock"
+        @mock-test="handleMockTest"
       />
     </div>
 

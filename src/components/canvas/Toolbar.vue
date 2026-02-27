@@ -111,6 +111,16 @@
           </template>
         </el-dropdown>
 
+        <!-- Mock 测试按钮（开发环境） -->
+        <el-tooltip content="测试 Mock 服务" placement="left">
+          <el-button 
+            :icon="Setting" 
+            circle 
+            size="small" 
+            @click="handleMockTest"
+          />
+        </el-tooltip>
+
         <!-- 缩放比例显示 -->
         <div v-if="showZoomText" class="zoom-text">{{ zoomText }}</div>
       </div>
@@ -138,7 +148,7 @@ import {
   Operation, Back, Right, Top, Bottom, Switch, Minus,
   RefreshLeft, RefreshRight, DCaret, CaretRight,
   Download, Picture, PictureFilled, Document,
-  Lock, Unlock
+  Lock, Unlock, Setting
 } from '@element-plus/icons-vue'
 import { useGraphStore } from '@/stores/graphStore'
 import { useAlignment } from '@/composables/useAlignment'
@@ -164,6 +174,7 @@ interface Emits {
   'export-jpeg': []
   'export-svg': []
   'toggle-lock': []
+  'mock-test': []
 }
 
 const emit = defineEmits<Emits>()
@@ -173,6 +184,10 @@ const isLocked = computed(() => graphStore.isLocked)
 
 const handleToggleLock = () => {
   emit('toggle-lock')
+}
+
+const handleMockTest = () => {
+  emit('mock-test')
 }
 
 // 使用对齐功能
@@ -451,7 +466,7 @@ const handleExportCommand = (command: string) => {
 .shortcuts-list {
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 30px;
 }
 
 .shortcut-item {
