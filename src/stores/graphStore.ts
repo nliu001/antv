@@ -320,23 +320,12 @@ export const useGraphStore = defineStore('graph', {
 
       this.isLocked = true
       
-      ;(this.graph as any).interacting({
-        nodeMovable: false,
-        magnetConnectable: false,
-        edgeMovable: false,
-        edgeLabelMovable: false,
-        arrowheadMovable: false,
-        vertexMovable: false,
-        vertexAddable: false,
-        vertexDeletable: false,
-      })
-
       ;(this.graph as any).disableSelectionMovable()
       this.graph.disableClipboard()
       this.graph.disableHistory()
 
       this.graph.getNodes().forEach(node => {
-        node.setProp('movable', false)
+        node.setData({ _locked: true }, { silent: true })
       })
 
       console.log('[GraphStore] 画布已锁定（节点不可移动，画布可平移）')
@@ -351,23 +340,12 @@ export const useGraphStore = defineStore('graph', {
 
       this.isLocked = false
       
-      ;(this.graph as any).interacting({
-        nodeMovable: true,
-        magnetConnectable: true,
-        edgeMovable: true,
-        edgeLabelMovable: true,
-        arrowheadMovable: true,
-        vertexMovable: true,
-        vertexAddable: true,
-        vertexDeletable: true,
-      })
-
       ;(this.graph as any).enableSelectionMovable()
       this.graph.enableClipboard()
       this.graph.enableHistory()
 
       this.graph.getNodes().forEach(node => {
-        node.setProp('movable', true)
+        node.setData({ _locked: false }, { silent: true })
       })
 
       console.log('[GraphStore] 画布已解锁')

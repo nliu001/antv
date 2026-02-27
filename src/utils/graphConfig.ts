@@ -1,5 +1,6 @@
 import type { Node } from '@antv/x6'
 import type { GraphManual } from '@antv/x6/lib/graph/options'
+import type { CellView } from '@antv/x6'
 import { NodeType, type DeviceNodeData, type SystemNodeData } from '@/types/node'
 
 export const EMBEDDING_HIGHLIGHT_STYLE = {
@@ -107,10 +108,27 @@ export function createGraphConfig(
       }
     },
 
-    interacting: {
-      nodeMovable: true,
-      edgeMovable: false,
-      edgeLabelMovable: false
+    interacting: (cellView: CellView) => {
+      const node = cellView.cell
+      const nodeData = node.getData()
+      if (nodeData?._locked) {
+        return {
+          nodeMovable: false,
+          magnetConnectable: false,
+          edgeMovable: false,
+          edgeLabelMovable: false,
+          arrowheadMovable: false,
+          vertexMovable: false,
+          vertexAddable: false,
+          vertexDeletable: false,
+        }
+      }
+      return {
+        nodeMovable: true,
+        magnetConnectable: true,
+        edgeMovable: false,
+        edgeLabelMovable: false,
+      }
     }
   }
 
