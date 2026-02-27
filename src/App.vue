@@ -8,10 +8,14 @@ import { useNodeDrop } from '@/composables/useNodeDrop'
 import { useKeyboardState } from '@/composables/useKeyboardState'
 import { useQuickPlacement } from '@/composables/useQuickPlacement'
 import { useGraphExport } from '@/composables/useGraphExport'
+import { useGraphStore } from '@/stores/graphStore'
 import type { StencilItemConfig } from '@/constants/stencil'
 
 // 初始化键盘状态管理
 const keyboard = useKeyboardState()
+
+// 初始化 Graph Store
+const graphStore = useGraphStore()
 
 // 初始化 Dnd 拖拽功能
 const { startDrag } = useDnd({
@@ -81,6 +85,13 @@ const handleExportJPEG = () => {
 const handleExportSVG = () => {
   graphExport.exportAsSVG()
 }
+
+/**
+ * 处理画布锁定/解锁
+ */
+const handleToggleLock = () => {
+  graphStore.toggleLock()
+}
 </script>
 
 <template>
@@ -102,6 +113,7 @@ const handleExportSVG = () => {
         @export-png="handleExportPNG"
         @export-jpeg="handleExportJPEG"
         @export-svg="handleExportSVG"
+        @toggle-lock="handleToggleLock"
       />
     </div>
 

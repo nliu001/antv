@@ -30,6 +30,9 @@ export interface GraphState {
   isInteracting: boolean
   isPanning: boolean
   isZooming: boolean
+
+  // 画布锁定状态
+  isLocked: boolean
 }
 
 /**

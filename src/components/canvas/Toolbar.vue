@@ -82,6 +82,17 @@
         <!-- 分隔线 - 导出 -->
         <div class="toolbar-divider"></div>
 
+        <!-- 锁定画布按钮 -->
+        <el-tooltip :content="isLocked ? '解锁画布' : '锁定画布'" placement="left">
+          <el-button 
+            :icon="isLocked ? Unlock : Lock" 
+            circle 
+            size="small" 
+            :type="isLocked ? 'warning' : 'default'"
+            @click="handleToggleLock" 
+          />
+        </el-tooltip>
+
         <!-- 导出下拉菜单 -->
         <el-dropdown trigger="click" @command="handleExportCommand">
           <el-button :icon="Download" circle size="small" title="导出图片" />
@@ -126,7 +137,8 @@ import {
   ZoomIn, ZoomOut, FullScreen, Refresh,
   Operation, Back, Right, Top, Bottom, Switch, Minus,
   RefreshLeft, RefreshRight, DCaret, CaretRight,
-  Download, Picture, PictureFilled, Document
+  Download, Picture, PictureFilled, Document,
+  Lock, Unlock
 } from '@element-plus/icons-vue'
 import { useGraphStore } from '@/stores/graphStore'
 import { useAlignment } from '@/composables/useAlignment'
@@ -151,10 +163,17 @@ interface Emits {
   'export-png': []
   'export-jpeg': []
   'export-svg': []
+  'toggle-lock': []
 }
 
 const emit = defineEmits<Emits>()
 const graphStore = useGraphStore()
+
+const isLocked = computed(() => graphStore.isLocked)
+
+const handleToggleLock = () => {
+  emit('toggle-lock')
+}
 
 // 使用对齐功能
 const alignment = useAlignment()

@@ -30,7 +30,10 @@ export const useGraphStore = defineStore('graph', {
     // 交互状态
     isInteracting: false,
     isPanning: false,
-    isZooming: false
+    isZooming: false,
+
+    // 画布锁定状态
+    isLocked: false
   }),
 
   getters: {
@@ -305,6 +308,75 @@ export const useGraphStore = defineStore('graph', {
       if (node) {
         node.setData({ ...node.getData(), ...data, updatedAt: new Date().toISOString() })
         console.log('[GraphStore] Node data updated:', nodeId)
+      }
+    },
+
+    /**
+     * 锁定画布
+     * @description 禁止所有编辑操作
+     */
+    lockGraph() {
+      if (!this.graph) return
+
+      this.isLocked = true
+      
+      this.graph.disableKeyboard()
+      this.graph.disablePanning()
+      this.graph.disableSelection()
+      this.graph.disableSnapline()
+      this.graph.disableClipboard()
+      this.graph.disableHistory()
+
+      this.graph.getNodes().forEach(node => {
+        node.setAttrs({
+          body: {
+            style: {
+              cursor: 'not-allowed'
+            }
+          }
+        })
+      })
+
+      console.log('[GraphStore] 画布已锁定')
+    },
+
+    /**
+     * 解锁画布
+     * @description 恢复所有编辑操作
+     */
+    unlockGraph() {
+      if (!this.graph) return
+
+      this.isLocked = false
+      
+      this.graph.enableKeyboard()
+      this.graph.enablePanning()
+      this.graph.enableSelection()
+      this.graph.enableSnapline()
+      this.graph.enableClipboard()
+      this.graph.enableHistory()
+
+      this.graph.getNodes().forEach(node => {
+        node.setAttrs({
+          body: {
+            style: {
+              cursor: 'move'
+            }
+          }
+        })
+      })
+
+      console.log('[GraphStore] 画布已解锁')
+    },
+
+    /**
+     * 切换画布锁定状态
+     */
+    toggleLock() {
+      if (this.isLocked) {
+        this.unlockGraph()
+      } else {
+        this.lockGraph()
       }
     }
   }
