@@ -51,16 +51,27 @@ export function useGraphExport() {
       const fileName = options.fileName || generateFileName('png')
       
       const container = document.querySelector('.graph-canvas-container') as HTMLElement
-      const width = options.width ?? container?.offsetWidth ?? 800
-      const height = options.height ?? container?.offsetHeight ?? 600
+      const canvasWidth = container?.offsetWidth || 800
+      const canvasHeight = container?.offsetHeight || 600
+
+      const zoom = graph.zoom()
+      const graphArea = graph.getGraphArea()
+      
+      const viewBox = {
+        x: graphArea.x,
+        y: graphArea.y,
+        width: canvasWidth / zoom,
+        height: canvasHeight / zoom,
+      }
 
       const exportOptions: any = {
         backgroundColor: options.backgroundColor || '#ffffff',
         quality: options.quality || 0.92,
         copyStyles: options.copyStyles !== false,
         serializeImages: options.serializeImages !== false,
-        width,
-        height,
+        width: canvasWidth,
+        height: canvasHeight,
+        viewBox,
       }
 
       if (options.padding !== undefined) exportOptions.padding = options.padding
@@ -95,16 +106,27 @@ export function useGraphExport() {
       const fileName = options.fileName || generateFileName('jpeg')
       
       const container = document.querySelector('.graph-canvas-container') as HTMLElement
-      const width = options.width ?? container?.offsetWidth ?? 800
-      const height = options.height ?? container?.offsetHeight ?? 600
+      const canvasWidth = container?.offsetWidth || 800
+      const canvasHeight = container?.offsetHeight || 600
+
+      const zoom = graph.zoom()
+      const graphArea = graph.getGraphArea()
+      
+      const viewBox = {
+        x: graphArea.x,
+        y: graphArea.y,
+        width: canvasWidth / zoom,
+        height: canvasHeight / zoom,
+      }
 
       const exportOptions: any = {
         backgroundColor: options.backgroundColor || '#ffffff',
         quality: options.quality || 0.92,
         copyStyles: options.copyStyles !== false,
         serializeImages: options.serializeImages !== false,
-        width,
-        height,
+        width: canvasWidth,
+        height: canvasHeight,
+        viewBox,
       }
 
       if (options.padding !== undefined) exportOptions.padding = options.padding
@@ -139,13 +161,24 @@ export function useGraphExport() {
       const fileName = options.fileName || generateFileName('svg')
       
       const container = document.querySelector('.graph-canvas-container') as HTMLElement
-      const width = options.width ?? container?.offsetWidth ?? 800
-      const height = options.height ?? container?.offsetHeight ?? 600
+      const canvasWidth = container?.offsetWidth || 800
+      const canvasHeight = container?.offsetHeight || 600
+
+      const zoom = graph.zoom()
+      const graphArea = graph.getGraphArea()
+      
+      const viewBox = {
+        x: graphArea.x,
+        y: graphArea.y,
+        width: canvasWidth / zoom,
+        height: canvasHeight / zoom,
+      }
 
       const exportOptions: any = {
         copyStyles: options.copyStyles !== false,
         serializeImages: options.serializeImages !== false,
-        preserveDimensions: { width, height },
+        preserveDimensions: { width: canvasWidth, height: canvasHeight },
+        viewBox,
       }
 
       console.log('[useGraphExport] SVG 导出配置:', exportOptions)
