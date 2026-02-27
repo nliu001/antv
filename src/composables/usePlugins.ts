@@ -238,7 +238,10 @@ export function usePlugins(options: UsePluginsOptions = {}): UsePluginsReturn {
       new Transform({
         resizing: {
           enabled: (node: Node) => {
-            const nodeData = node.getData<SystemNodeData>()
+            const nodeData = node.getData<SystemNodeData & { _locked?: boolean }>()
+            if (nodeData?._locked) {
+              return false
+            }
             return nodeData?.type === NodeType.SYSTEM
           },
           minWidth: 200,
