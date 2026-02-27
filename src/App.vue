@@ -49,7 +49,6 @@ const graphExport = useGraphExport()
  * 处理物料项拖拽开始
  */
 const handleStencilDragStart = (config: StencilItemConfig, event: DragEvent) => {
-  console.log('开始拖拽:', config.label)
   // 拖拽开始时退出快速放置模式
   quickPlacement.stopPlacement()
   startDrag(config, event)
@@ -58,8 +57,8 @@ const handleStencilDragStart = (config: StencilItemConfig, event: DragEvent) => 
 /**
  * 处理物料项拖拽结束
  */
-const handleStencilDragEnd = (config: StencilItemConfig, _event: DragEvent) => {
-  console.log('结束拖拽:', config.label)
+const handleStencilDragEnd = (_config: StencilItemConfig, _event: DragEvent) => {
+  // 拖拽结束处理
 }
 
 /**

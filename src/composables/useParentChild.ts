@@ -7,7 +7,6 @@ export class ParentChildManager {
     try {
       const currentParent = device.getParent()
       if (currentParent && currentParent.id === container.id) {
-        console.warn('[ParentChild] 设备已在该容器中')
         return false
       }
 
@@ -15,12 +14,7 @@ export class ParentChildManager {
         this.removeFromContainer(device, currentParent as Node)
       }
 
-      const devicePos = device.getPosition()
-      console.log('[ParentChild] 设备当前位置（绝对）:', devicePos)
-      console.log('[ParentChild] 容器位置（绝对）:', container.getPosition())
-
       container.addChild(device)
-      console.log('[ParentChild] addChild后设备位置:', device.getPosition())
 
       ZIndexManager.setNodeZIndex(device)
 
@@ -32,15 +26,8 @@ export class ParentChildManager {
         }
       }
 
-      console.log('[ParentChild] 入组成功:', {
-        device: device.id,
-        container: container.id,
-        devicePos
-      })
-
       return true
     } catch (error) {
-      console.error('[ParentChild] 入组失败:', error)
       return false
     }
   }
@@ -49,18 +36,14 @@ export class ParentChildManager {
     try {
       const currentParent = device.getParent()
       if (!currentParent || currentParent.id !== container.id) {
-        console.warn('[ParentChild] 设备不在该容器中')
         return false
       }
 
       const devicePos = device.getPosition()
-      console.log('[ParentChild] 出组前设备位置（绝对）:', devicePos)
 
       container.unembed(device)
-      console.log('[ParentChild] 已解除父子关系 (unembed)')
 
       device.setPosition(devicePos.x, devicePos.y)
-      console.log('[ParentChild] 出组后设备位置已恢复:', device.getPosition())
 
       ZIndexManager.setNodeZIndex(device)
 
@@ -73,15 +56,8 @@ export class ParentChildManager {
         }
       }
 
-      console.log('[ParentChild] 出组成功:', {
-        device: device.id,
-        container: container.id,
-        devicePos
-      })
-
       return true
     } catch (error) {
-      console.error('[ParentChild] 出组失败:', error)
       return false
     }
   }

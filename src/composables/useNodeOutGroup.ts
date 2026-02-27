@@ -22,7 +22,6 @@ export function useNodeOutGroup(graph: Graph | null = null, isCtrlPressed: () =>
    */
   function setGraph(newGraph: Graph) {
     graphInstance = newGraph
-    console.log('[useNodeOutGroup] Graph 实例已设置')
   }
 
   /**
@@ -36,10 +35,7 @@ export function useNodeOutGroup(graph: Graph | null = null, isCtrlPressed: () =>
     const nodeBBox = node.getBBox()
     const parentBBox = parent.getBBox()
     
-    const ratio = calculateOverlapRatio(nodeBBox, parentBBox)
-    console.log(`[useNodeOutGroup] 重叠率计算: node=${node.id}, parent=${parent.id}, ratio=${(ratio * 100).toFixed(1)}%`)
-    
-    return ratio
+    return calculateOverlapRatio(nodeBBox, parentBBox)
   }
 
   /**
@@ -71,21 +67,11 @@ export function useNodeOutGroup(graph: Graph | null = null, isCtrlPressed: () =>
 
     // 5. 判定是否出组（重叠率 = 0%，即完全脱离）
     if (overlapRatio === 0) {
-      console.log(`[useNodeOutGroup] 触发出组: node=${node.id}, parent=${parent.id}`)
-      
       // 执行出组
       const success = ParentChildManager.removeFromContainer(node, parent as Node)
       
-      if (success) {
-        console.log(`[useNodeOutGroup] 出组成功 ✅`)
-        // TODO: 播放出组动画
-        return true
-      } else {
-        console.error(`[useNodeOutGroup] 出组失败 ❌`)
-        return false
-      }
+      return success
     } else {
-      console.log(`[useNodeOutGroup] 未满足出组条件: 重叠率=${(overlapRatio * 100).toFixed(1)}% > 0%`)
       return false
     }
   }
@@ -95,7 +81,6 @@ export function useNodeOutGroup(graph: Graph | null = null, isCtrlPressed: () =>
    */
   function enable() {
     if (!graphInstance) {
-      console.warn('[useNodeOutGroup] Graph 实例未设置，无法启用')
       return
     }
 
@@ -108,8 +93,6 @@ export function useNodeOutGroup(graph: Graph | null = null, isCtrlPressed: () =>
       if (nodeData?.type !== NodeType.DEVICE) {
         return
       }
-
-      console.log(`[useNodeOutGroup] 检测到节点拖动结束: ${node.id}`)
       
       // 检查并执行出组
       checkAndOutGroup(node)
@@ -117,8 +100,6 @@ export function useNodeOutGroup(graph: Graph | null = null, isCtrlPressed: () =>
 
     graph.on('node:mouseup', mouseUpHandler)
     eventHandlers.push(() => graph.off('node:mouseup', mouseUpHandler))
-
-    console.log('[useNodeOutGroup] 出组监听已启用')
   }
 
   /**
@@ -127,7 +108,6 @@ export function useNodeOutGroup(graph: Graph | null = null, isCtrlPressed: () =>
   function disable() {
     eventHandlers.forEach(cleanup => cleanup())
     eventHandlers.length = 0
-    console.log('[useNodeOutGroup] 出组监听已禁用')
   }
 
   // 组件卸载时自动清理

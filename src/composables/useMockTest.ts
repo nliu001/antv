@@ -19,7 +19,6 @@ export function useMockTest() {
       const response = await templateApi.getDeviceTemplates()
       if (response.code === 200) {
         addResult(`✅ Success: Found ${response.data.length} device templates`)
-        console.log('Device templates:', response.data)
       } else {
         addResult(`❌ Failed: ${response.message}`)
       }
@@ -37,7 +36,6 @@ export function useMockTest() {
       const response = await templateApi.getSystemTemplates()
       if (response.code === 200) {
         addResult(`✅ Success: Found ${response.data.length} system templates`)
-        console.log('System templates:', response.data)
       } else {
         addResult(`❌ Failed: ${response.message}`)
       }
@@ -71,7 +69,6 @@ export function useMockTest() {
       if (response.code === 200) {
         savedGraphId = response.data.id
         addResult(`✅ Success: Graph saved with ID ${response.data.id}`)
-        console.log('Saved graph:', response.data)
       } else {
         addResult(`❌ Failed: ${response.message}`)
       }
@@ -89,7 +86,6 @@ export function useMockTest() {
       const response = await graphApi.getList({ page: 1, pageSize: 10 })
       if (response.code === 200) {
         addResult(`✅ Success: Found ${response.data.total} graphs`)
-        console.log('Graph list:', response.data)
       } else {
         addResult(`❌ Failed: ${response.message}`)
       }
@@ -121,7 +117,6 @@ export function useMockTest() {
       if (response.code === 200) {
         savedNodeId = response.data.id
         addResult(`✅ Success: Node saved with ID ${response.data.id}`)
-        console.log('Saved node:', response.data)
       } else {
         addResult(`❌ Failed: ${response.message}`)
       }
@@ -149,7 +144,6 @@ export function useMockTest() {
       })
       if (response.code === 200) {
         addResult(`✅ Success: Node updated - new position (${response.data.x}, ${response.data.y})`)
-        console.log('Updated node:', response.data)
       } else {
         addResult(`❌ Failed: ${response.message}`)
       }

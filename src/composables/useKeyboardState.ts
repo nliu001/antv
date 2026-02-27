@@ -24,7 +24,6 @@ export function useKeyboardState() {
     if (event.ctrlKey || event.metaKey) {
       if (!isCtrlPressed.value) {
         isCtrlPressed.value = true
-        console.log('[useKeyboardState] Ctrl 键按下')
         
         // 触发回调
         ctrlPressCallbacks.forEach(callback => callback())
@@ -55,7 +54,6 @@ export function useKeyboardState() {
   function handleBlur() {
     if (isCtrlPressed.value) {
       isCtrlPressed.value = false
-      console.log('[useKeyboardState] 窗口失焦，Ctrl 状态重置')
       
       // 触发释放回调
       ctrlReleaseCallbacks.forEach(callback => callback())
@@ -81,7 +79,6 @@ export function useKeyboardState() {
     window.addEventListener('keydown', handleKeyDown)
     window.addEventListener('keyup', handleKeyUp)
     window.addEventListener('blur', handleBlur)
-    console.log('[useKeyboardState] 键盘监听已启动')
   })
 
   // 组件卸载时清理监听器
@@ -89,7 +86,6 @@ export function useKeyboardState() {
     window.removeEventListener('keydown', handleKeyDown)
     window.removeEventListener('keyup', handleKeyUp)
     window.removeEventListener('blur', handleBlur)
-    console.log('[useKeyboardState] 键盘监听已清理')
   })
 
   return {

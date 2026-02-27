@@ -29,8 +29,9 @@ const nodeList: any[] = []
  * @returns 分页后的图形列表
  */
 function getGraphList(query: any) {
+  console.log('[Mock API] GET /api/graph/list', query)
   const { page = 1, pageSize = 10 } = query
-  return {
+  const result = {
     code: 200,
     message: 'success',
     data: {
@@ -40,6 +41,8 @@ function getGraphList(query: any) {
       pageSize: Number(pageSize),
     },
   }
+  console.log('[Mock API] Response:', result)
+  return result
 }
 
 /**
@@ -50,11 +53,12 @@ function getGraphList(query: any) {
  * @returns 图形详情（包含节点列表）或 404 错误
  */
 function getGraphById(query: any) {
+  console.log('[Mock API] GET /api/graph/:id', query)
   const { id } = query
   const graph = graphList.find(g => g.id === id)
   if (graph) {
     const graphNodes = nodeList.filter(n => n.graphId === id)
-    return {
+    const result = {
       code: 200,
       message: 'success',
       data: {
@@ -62,12 +66,16 @@ function getGraphById(query: any) {
         nodes: graphNodes,
       },
     }
+    console.log('[Mock API] Response:', result)
+    return result
   }
-  return {
+  const result = {
     code: 404,
     message: 'Graph not found',
     data: null,
   }
+  console.log('[Mock API] Response:', result)
+  return result
 }
 
 /**
@@ -82,6 +90,7 @@ function getGraphById(query: any) {
  * @returns 保存后的图形数据
  */
 function saveGraph(body: any) {
+  console.log('[Mock API] POST /api/graph/save', body)
   const { id, name, description, nodes, edges } = body
   const now = new Date().toISOString()
 
@@ -96,11 +105,13 @@ function saveGraph(body: any) {
         edges,
         updatedAt: now,
       }
-      return {
+      const result = {
         code: 200,
         message: 'success',
         data: graphList[index],
       }
+      console.log('[Mock API] Response (updated):', result)
+      return result
     }
   }
 
@@ -114,12 +125,13 @@ function saveGraph(body: any) {
     updatedAt: now,
   }
   graphList.push(newGraph)
-
-  return {
+  const result = {
     code: 200,
     message: 'success',
     data: newGraph,
   }
+  console.log('[Mock API] Response (created):', result)
+  return result
 }
 
 /**
@@ -130,21 +142,26 @@ function saveGraph(body: any) {
  * @returns 成功返回 200，图形不存在返回 404
  */
 function deleteGraph(query: any) {
+  console.log('[Mock API] DELETE /api/graph/delete/:id', query)
   const { id } = query
   const index = graphList.findIndex(g => g.id === id)
   if (index !== -1) {
     graphList.splice(index, 1)
-    return {
+    const result = {
       code: 200,
       message: 'success',
       data: null,
     }
+    console.log('[Mock API] Response:', result)
+    return result
   }
-  return {
+  const result = {
     code: 404,
     message: 'Graph not found',
     data: null,
   }
+  console.log('[Mock API] Response:', result)
+  return result
 }
 
 /**
@@ -153,7 +170,8 @@ function deleteGraph(query: any) {
  * @returns 设备模板列表（路由器、交换机、服务器、防火墙、存储设备）
  */
 function getDeviceTemplates() {
-  return {
+  console.log('[Mock API] GET /api/templates/devices')
+  const result = {
     code: 200,
     message: 'success',
     data: [
@@ -204,6 +222,8 @@ function getDeviceTemplates() {
       },
     ],
   }
+  console.log('[Mock API] Response:', result)
+  return result
 }
 
 /**
@@ -212,7 +232,8 @@ function getDeviceTemplates() {
  * @returns 系统容器模板列表（网络区域、数据中心、云区域）
  */
 function getSystemTemplates() {
-  return {
+  console.log('[Mock API] GET /api/templates/systems')
+  const result = {
     code: 200,
     message: 'success',
     data: [
@@ -245,6 +266,8 @@ function getSystemTemplates() {
       },
     ],
   }
+  console.log('[Mock API] Response:', result)
+  return result
 }
 
 /**
@@ -264,6 +287,7 @@ function getSystemTemplates() {
  * @returns 保存后的节点数据
  */
 function saveNode(body: any) {
+  console.log('[Mock API] POST /api/node/save', body)
   const { graphId, id, type, x, y, width, height, label, data, parentId } = body
   const now = new Date().toISOString()
 
@@ -281,16 +305,18 @@ function saveNode(body: any) {
         parentId,
         updatedAt: now,
       }
-      return {
+      const result = {
         code: 200,
         message: 'success',
         data: nodeList[index],
       }
+      console.log('[Mock API] Response (updated):', result)
+      return result
     }
   }
 
   const newNode = {
-    id: Random.guid(),
+    id: id || Random.guid(),
     graphId,
     type,
     x,
@@ -304,12 +330,13 @@ function saveNode(body: any) {
     updatedAt: now,
   }
   nodeList.push(newNode)
-
-  return {
+  const result = {
     code: 200,
     message: 'success',
     data: newNode,
   }
+  console.log('[Mock API] Response (created):', result)
+  return result
 }
 
 /**
@@ -328,15 +355,18 @@ function saveNode(body: any) {
  * @returns 更新后的节点数据或 404 错误
  */
 function updateNode(body: any) {
+  console.log('[Mock API] PUT /api/node/update', body)
   const { id, graphId, x, y, width, height, label, data, parentId } = body
   const node = nodeList.find(n => n.id === id && n.graphId === graphId)
 
   if (!node) {
-    return {
+    const result = {
       code: 404,
       message: 'Node not found',
       data: null,
     }
+    console.log('[Mock API] Response:', result)
+    return result
   }
 
   const now = new Date().toISOString()
@@ -351,11 +381,13 @@ function updateNode(body: any) {
     updatedAt: now,
   })
 
-  return {
+  const result = {
     code: 200,
     message: 'success',
     data: node,
   }
+  console.log('[Mock API] Response:', result)
+  return result
 }
 
 /**
@@ -367,22 +399,27 @@ function updateNode(body: any) {
  * @returns 成功返回 200，节点不存在返回 404
  */
 function deleteNode(query: any) {
+  console.log('[Mock API] DELETE /api/node/delete/:id', query)
   const { id, graphId } = query
   const index = nodeList.findIndex(n => n.id === id && n.graphId === graphId)
 
   if (index !== -1) {
     nodeList.splice(index, 1)
-    return {
+    const result = {
       code: 200,
       message: 'success',
       data: null,
     }
+    console.log('[Mock API] Response:', result)
+    return result
   }
-  return {
+  const result = {
     code: 404,
     message: 'Node not found',
     data: null,
   }
+  console.log('[Mock API] Response:', result)
+  return result
 }
 
 /**

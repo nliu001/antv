@@ -19,6 +19,7 @@ import { useAlignment } from '@/composables/useAlignment'
 import { useEmbeddingPreview } from '@/composables/useEmbeddingPreview'
 import { nodeApi } from '@/services/api'
 import type { GraphOptions } from '@/types/graph'
+import { useGraphPersistence } from '@/composables/useGraphPersistence'
 
 /**
  * 防抖函数
@@ -39,6 +40,7 @@ function debounce<T extends (...args: any[]) => any>(fn: T, delay: number): T {
  */
 export function useGraph(options?: Partial<GraphOptions>) {
   const graphStore = useGraphStore()
+  const graphPersistence = useGraphPersistence()
   
   // 支持外部传入容器引用，或创建内部引用
   const externalContainer = options?.container
@@ -82,7 +84,6 @@ export function useGraph(options?: Partial<GraphOptions>) {
    */
   const initGraph = () => {
     if (!containerRef.value) {
-      console.error('[useGraph] 容器元素未找到')
       return
     }
 
@@ -168,46 +169,57 @@ export function useGraph(options?: Partial<GraphOptions>) {
       )
 
       graph.on('node:moved', async ({ node }) => {
+        if (!graphPersistence.currentGraphId.value) return
         const position = node.position()
         try {
           await nodeApi.update({
             id: node.id,
-            graphId: 'current',
+            graphId: graphPersistence.currentGraphId.value,
             x: position.x,
             y: position.y,
           })
         } catch (error) {
-          console.warn('[API] 节点位置同步失败:', error)
+          // 节点位置同步失败，静默处理
         }
       })
 
       graph.on('node:resized', async ({ node }) => {
+        if (!graphPersistence.currentGraphId.value) return
         const size = node.size()
         const position = node.position()
         try {
           await nodeApi.update({
             id: node.id,
-            graphId: 'current',
+            graphId: graphPersistence.currentGraphId.value,
             x: position.x,
             y: position.y,
             width: size.width,
             height: size.height,
           })
         } catch (error) {
-          console.warn('[API] 节点大小同步失败:', error)
+          // 节点大小同步失败，静默处理
         }
       })
 
       graph.on('node:removed', async ({ node }) => {
+        if (!graphPersistence.currentGraphId.value) return
         try {
-          await nodeApi.delete(node.id, 'current')
+          await nodeApi.delete(node.id, graphPersistence.currentGraphId.value)
         } catch (error) {
-          console.warn('[API] 节点删除同步失败:', error)
+          // 节点删除同步失败，静默处理
         }
       })
 
+      graph.on('node:added', async ({ node }) => {
+        if (!graphPersistence.currentGraphId.value) {
+          const graphName = 'Topology-' + new Date().toISOString().slice(0, 10)
+          await graphPersistence.saveGraphEmpty(graphName)
+        }
+        
+        await graphPersistence.saveNode(node)
+      })
+
     } catch (error) {
-      console.error('[useGraph] Graph 初始化失败:', error)
       graphStore.setError(error as Error)
       ElMessage.error('画布初始化失败，请刷新页面重试')
     }

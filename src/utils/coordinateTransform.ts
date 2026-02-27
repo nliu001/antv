@@ -154,17 +154,7 @@ export function isNodeInContainer(node: Node, container: Node): boolean {
   const nodeCenter = getNodeCenter(node)
   const containerBBox = getNodeBBox(container)
   
-  const result = isPointInBBox(nodeCenter, containerBBox)
-  
-  console.log('[coordinateTransform] 检测节点是否在容器内:', {
-    node: node.id,
-    container: container.id,
-    nodeCenter,
-    containerBBox,
-    result
-  })
-  
-  return result
+  return isPointInBBox(nodeCenter, containerBBox)
 }
 
 /**
@@ -185,16 +175,6 @@ export function isNodeOutOfContainer(
   const containerBBox = getNodeBBox(container)
   const overlapRatio = calculateOverlapRatio(nodeBBox, containerBBox)
   const isOut = overlapRatio < threshold
-  
-  console.log('[coordinateTransform] 检测节点是否外溢:', {
-    node: node.id,
-    container: container.id,
-    nodeBBox,
-    containerBBox,
-    overlapRatio,
-    threshold,
-    isOut
-  })
   
   return isOut
 }

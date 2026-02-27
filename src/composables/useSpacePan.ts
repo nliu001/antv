@@ -46,8 +46,6 @@ export function useSpacePan(options: UseSpacePanOptions = {}): UseSpacePanReturn
           graph.disableRubberband()
         }
       }
-      
-      console.log('[useSpacePan] Space 键按下，进入抓取模式')
     }
   }
 
@@ -69,8 +67,6 @@ export function useSpacePan(options: UseSpacePanOptions = {}): UseSpacePanReturn
           wasRubberbandEnabled.value = false
         }
       }
-      
-      console.log('[useSpacePan] Space 键松开，退出抓取模式')
     }
   }
 
@@ -122,7 +118,6 @@ export function useSpacePan(options: UseSpacePanOptions = {}): UseSpacePanReturn
 
   const enable = () => {
     enabled.value = true
-    console.log('[useSpacePan] 已启用')
   }
 
   const disable = () => {
@@ -141,14 +136,11 @@ export function useSpacePan(options: UseSpacePanOptions = {}): UseSpacePanReturn
         wasRubberbandEnabled.value = false
       }
     }
-    
-    console.log('[useSpacePan] 已禁用')
   }
 
   const setupEventListeners = () => {
     const graph = getGraph()
     if (!graph) {
-      console.warn('[useSpacePan] Graph 实例不存在')
       return
     }
 
@@ -160,8 +152,6 @@ export function useSpacePan(options: UseSpacePanOptions = {}): UseSpacePanReturn
     container.addEventListener('mousemove', handleMouseMove)
     container.addEventListener('mouseup', handleMouseUp)
     container.addEventListener('mouseleave', handleMouseUp)
-
-    console.log('[useSpacePan] 事件监听器已设置')
   }
 
   const removeEventListeners = () => {
@@ -176,8 +166,6 @@ export function useSpacePan(options: UseSpacePanOptions = {}): UseSpacePanReturn
     container.removeEventListener('mousemove', handleMouseMove)
     container.removeEventListener('mouseup', handleMouseUp)
     container.removeEventListener('mouseleave', handleMouseUp)
-
-    console.log('[useSpacePan] 事件监听器已移除')
   }
 
   onMounted(() => {

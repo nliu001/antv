@@ -34,7 +34,6 @@ export function useDnd(options: UseDndOptions = {}): UseDndReturn {
   const initDnd = () => {
     const rawGraph = getRawGraph()
     if (!rawGraph) {
-      console.warn('[useDnd] Graph 实例不存在，无法初始化 Dnd')
       return
     }
 
@@ -46,10 +45,8 @@ export function useDnd(options: UseDndOptions = {}): UseDndReturn {
         draggingContainer: options.draggingContainer,
         validateNode: options.validateNode || (() => true)
       })
-
-      console.log('[useDnd] Dnd 初始化成功')
     } catch (error) {
-      console.error('[useDnd] Dnd 初始化失败:', error)
+      // Dnd 初始化失败，静默处理
     }
   }
 
@@ -89,18 +86,15 @@ export function useDnd(options: UseDndOptions = {}): UseDndReturn {
 
   const startDrag = (config: StencilItemConfig, event: DragEvent) => {
     if (!dnd.value) {
-      console.warn('[useDnd] Dnd 未初始化')
       return
     }
 
     const rawGraph = getRawGraph()
     if (!rawGraph) {
-      console.warn('[useDnd] Graph 实例不存在')
       return
     }
 
     if (graphStore.isLocked) {
-      console.warn('[useDnd] 画布已锁定，禁止添加新节点')
       return
     }
 
@@ -117,21 +111,16 @@ export function useDnd(options: UseDndOptions = {}): UseDndReturn {
         data: nodeData
       })
 
-      console.log('[useDnd] 创建节点:', nodeId, config.label)
-
       dnd.value.start(node, event as MouseEvent)
       isDragging.value = true
-
-      console.log('[useDnd] 开始拖拽:', config.label)
     } catch (error) {
-      console.error('[useDnd] 拖拽启动失败:', error)
+      // 拖拽启动失败，静默处理
     }
   }
 
   const destroy = () => {
     if (dnd.value) {
       dnd.value = null
-      console.log('[useDnd] Dnd 已销毁')
     }
   }
 
@@ -139,15 +128,7 @@ export function useDnd(options: UseDndOptions = {}): UseDndReturn {
     const rawGraph = getRawGraph()
     if (!rawGraph) return
 
-    rawGraph.on('node:added', (args) => {
-      console.log('[useDnd] 节点已添加:', args.node.id, args.node.getPosition())
-      console.log('[useDnd] 节点数据:', args.node.getData())
-      console.log('[useDnd] 画布总节点数:', rawGraph.getNodes().length)
-
-      rawGraph.getNodes().forEach(node => {
-        console.log('  - 节点:', node.id, node.shape, node.getPosition(), node.isVisible())
-      })
-
+    rawGraph.on('node:added', () => {
       isDragging.value = false
       currentDragConfig.value = null
     })

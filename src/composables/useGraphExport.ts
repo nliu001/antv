@@ -77,11 +77,9 @@ export function useGraphExport() {
       if (options.padding !== undefined) exportOptions.padding = options.padding
       if (options.ratio !== undefined) exportOptions.ratio = options.ratio
 
-      console.log('[useGraphExport] PNG 导出配置:', exportOptions)
       await graph.exportPNG(fileName, exportOptions)
       ElMessage.success('导出成功！文件已保存为 ' + fileName)
     } catch (error) {
-      console.error('[useGraphExport] PNG 导出失败:', error)
       ElMessage.error('PNG 导出失败，请重试')
     } finally {
       isExporting.value = false
@@ -132,11 +130,9 @@ export function useGraphExport() {
       if (options.padding !== undefined) exportOptions.padding = options.padding
       if (options.ratio !== undefined) exportOptions.ratio = options.ratio
 
-      console.log('[useGraphExport] JPEG 导出配置:', exportOptions)
       await graph.exportJPEG(fileName, exportOptions)
       ElMessage.success('导出成功！文件已保存为 ' + fileName)
     } catch (error) {
-      console.error('[useGraphExport] JPEG 导出失败:', error)
       ElMessage.error('JPEG 导出失败，请重试')
     } finally {
       isExporting.value = false
@@ -181,11 +177,9 @@ export function useGraphExport() {
         viewBox,
       }
 
-      console.log('[useGraphExport] SVG 导出配置:', exportOptions)
       await graph.exportSVG(fileName, exportOptions)
       ElMessage.success('导出成功！文件已保存为 ' + fileName)
     } catch (error) {
-      console.error('[useGraphExport] SVG 导出失败:', error)
       ElMessage.error('SVG 导出失败，请重试')
     } finally {
       isExporting.value = false

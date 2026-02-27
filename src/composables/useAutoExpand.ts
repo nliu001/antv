@@ -53,7 +53,6 @@ export function useAutoExpand(initialGraph: Graph | null = null, config: Partial
     if (!graph || !expandConfig.enabled) return
     if (isExpanding.value) return // 防止递归触发
     if (isPaused.value) {
-      console.log('[useAutoExpand] 扩容已暂停，跳过')
       return // Ctrl 键按下时跳过扩容
     }
 
@@ -63,14 +62,12 @@ export function useAutoExpand(initialGraph: Graph | null = null, config: Partial
       // 1. 获取容器当前位置和尺寸
       const oldPos = container.getPosition()
       const oldSize = container.getSize()
-      console.log(`[useAutoExpand] 容器当前状态: pos=(${oldPos.x}, ${oldPos.y}), size=(${oldSize.width}, ${oldSize.height})`)
 
       // 2. 获取所有子节点
       const children = container.getChildren()
       if (!children || children.length === 0) {
         // 空容器处理：保持位置不变，应用最小尺寸
         container.resize(expandConfig.minWidth, expandConfig.minHeight)
-        console.log(`[useAutoExpand] 空容器，应用最小尺寸: (${expandConfig.minWidth}, ${expandConfig.minHeight})`)
         return
       }
 
@@ -78,17 +75,14 @@ export function useAutoExpand(initialGraph: Graph | null = null, config: Partial
       const childNodes = children.filter((child) => child.isNode()) as Node[]
       if (childNodes.length === 0) {
         container.resize(expandConfig.minWidth, expandConfig.minHeight)
-        console.log(`[useAutoExpand] 无子节点，应用最小尺寸`)
         return
       }
 
       // 3. 计算并集包围盒（绝对坐标）
       const unionBBox = calculateUnionBBox(childNodes, graph)
       if (!isValidBBox(unionBBox)) {
-        console.warn(`[useAutoExpand] 无效的包围盒`)
         return
       }
-      console.log(`[useAutoExpand] 子节点并集包围盒: x=${unionBBox.x}, y=${unionBBox.y}, w=${unionBBox.width}, h=${unionBBox.height}`)
 
       // 4. 计算容器新的左上角（可向左/上扩展，不向右/下收缩）
       // 添加 PADDING 后的子节点包围盒左上角
@@ -120,8 +114,6 @@ export function useAutoExpand(initialGraph: Graph | null = null, config: Partial
       newWidth = Math.max(newWidth, expandConfig.minWidth)
       newHeight = Math.max(newHeight, expandConfig.minHeight)
 
-      console.log(`[useAutoExpand] 计算结果: newPos=(${newX}, ${newY}), newSize=(${newWidth}, ${newHeight})`)
-
       // 7. 判断是否需要调整位置
       const needMoveLeft = newX < oldPos.x
       const needMoveUp = newY < oldPos.y
@@ -131,9 +123,6 @@ export function useAutoExpand(initialGraph: Graph | null = null, config: Partial
       // ✅ 使用 setPosition() 不会触发子节点跟随
       if (positionChanged) {
         container.setPosition(newX, newY)
-        console.log(`[useAutoExpand] 容器向左上扩展: (${oldPos.x}, ${oldPos.y}) -> (${newX}, ${newY})`)
-      } else {
-        console.log(`[useAutoExpand] 容器位置保持不变: (${oldPos.x}, ${oldPos.y})`)
       }
 
       // 9. 应用尺寸调整（使用过渡动画）
@@ -141,7 +130,6 @@ export function useAutoExpand(initialGraph: Graph | null = null, config: Partial
         absolute: true,
         silent: false 
       })
-      console.log(`[useAutoExpand] 容器尺寸调整: (${oldSize.width}, ${oldSize.height}) -> (${newWidth}, ${newHeight})`)
     } finally {
       isExpanding.value = false
     }
@@ -168,7 +156,6 @@ export function useAutoExpand(initialGraph: Graph | null = null, config: Partial
    */
   function setGraph(newGraph: Graph) {
     graph = newGraph
-    console.log('[useAutoExpand] Graph 实例已设置')
   }
 
   /**
@@ -238,8 +225,6 @@ export function useAutoExpand(initialGraph: Graph | null = null, config: Partial
     // }
     // graphInstance.on('node:removed', removeHandler)
     // eventHandlers.push(() => graphInstance.off('node:removed', removeHandler))
-
-    console.log('[useAutoExpand] 自动扩容已启用')
   }
 
   /**
@@ -252,8 +237,6 @@ export function useAutoExpand(initialGraph: Graph | null = null, config: Partial
 
     // 取消待执行的节流函数
     throttledExpand.cancel()
-
-    console.log('[useAutoExpand] 自动扩容已禁用')
   }
 
   /**
@@ -274,7 +257,6 @@ export function useAutoExpand(initialGraph: Graph | null = null, config: Partial
    */
   function pause() {
     isPaused.value = true
-    console.log('[useAutoExpand] 扩容已暂停')
   }
 
   /**
@@ -285,11 +267,9 @@ export function useAutoExpand(initialGraph: Graph | null = null, config: Partial
   function resume() {
     const graphStore = useGraphStore()
     if (graphStore.isLocked) {
-      console.log('[useAutoExpand] 画布已锁定，不恢复扩容')
       return
     }
     isPaused.value = false
-    console.log('[useAutoExpand] 扩容已恢复')
   }
 
   // 组件卸载时自动清理

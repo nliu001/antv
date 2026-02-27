@@ -22,7 +22,6 @@ export function registerDeviceNode() {
       items: []
     }
   })
-  console.log('[NodeRegistry] Device node registered')
 }
 
 /**
@@ -37,7 +36,6 @@ export function registerSystemContainer() {
     attrs: SYSTEM_CONTAINER_CONFIG.attrs,
     zIndex: SYSTEM_CONTAINER_CONFIG.zIndex
   })
-  console.log('[NodeRegistry] System container registered')
 }
 
 /**

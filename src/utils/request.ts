@@ -1,6 +1,9 @@
 const BASE_URL = '/api'
 
 async function request<T>(url: string, options?: RequestInit): Promise<T> {
+  const method = options?.method || 'GET'
+  console.log(`[API Request] ${method} ${BASE_URL}${url}`, options?.body ? JSON.parse(options.body as string) : '')
+  
   const response = await fetch(`${BASE_URL}${url}`, {
     headers: {
       'Content-Type': 'application/json',

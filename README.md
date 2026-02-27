@@ -1,76 +1,188 @@
-# 数字孪生可视化平台
+# AntV X6 拓扑设计器
 
-## 项目概述
+## 一、项目概述
 
-基于 Vue3 + Element Plus + AntV X6 技术栈开发的数字孪生可视化平台，实现了孪生体与系统孪生体的层级嵌套展示、拖拽交互、自动布局和抽屉式编辑功能。
+基于 Vue 3 + TypeScript + AntV X6 构建的拓扑图设计器，支持设备节点和系统容器的可视化编辑、拖拽布局、自动扩容和数据持久化。
 
-## 技术栈
+**技术栈：**
+- Vue 3 (Composition API)
+- TypeScript
+- AntV X6 (图编辑引擎)
+- Pinia (状态管理)
+- Element Plus (UI 组件)
+- Vite (构建工具)
 
-- **框架**: Vue 3 (script setup 语法糖) + TypeScript
-- **UI组件库**: Element Plus 2.4+
-- **图形引擎**: AntV X6 2.18+
-- **状态管理**: Pinia
-- **构建工具**: Vite
-- **代码规范**: ESLint + Prettier
+## 二、核心功能
 
-## 功能特性
+### 1. 节点类型
 
-### 1. 节点管理
-- **孪生体节点**: 基础实体节点，可包含属性、方法等信息
-- **系统孪生体节点**: 组节点，可包含多个子节点形成层级结构
-- 支持节点的创建、编辑、删除操作
+| 类型 | 说明 | 组件 |
+|------|------|------|
+| 设备节点 | 路由器、交换机、服务器、防火墙、存储设备 | `DeviceNode.vue` |
+| 系统容器 | 网络区域、数据中心、云区域（可嵌套子节点） | `SystemContainer.vue` |
 
-### 2. 拖拽交互
-- 支持节点自由拖拽
-- 拖拽校验：仅允许将节点拖拽到系统组内部
-- 拖拽完成后自动更新节点的父子关系
-- 拖拽过程中的视觉反馈
+### 2. 交互功能
 
-### 3. 自动布局
-- **居中排布**: 孪生体拖入系统组时自动居中显示
-- **自动换行**: 组内节点超过5个时自动换行排布
-- **动态调整**: 根据子节点数量动态调整组节点尺寸
+| 功能 | 操作方式 | 实现模块 |
+|------|----------|----------|
+| 拖拽放置 | 从左侧物料面板拖拽到画布 | `useDnd.ts` |
+| 快速放置 | 点击物料 → 画布点击放置 | `useQuickPlacement.ts` |
+| 画布平移 | Space + 鼠标拖拽 | `useSpacePan.ts` |
+| 画布缩放 | Ctrl + 滚轮 / 工具栏按钮 | `useGraph.ts` |
+| 节点出组 | Ctrl + 拖拽节点离开容器 | `useNodeOutGroup.ts` |
+| 框选多选 | 鼠标拖拽框选 | `usePlugins.ts` |
+| 撤销重做 | Ctrl+Z / Ctrl+Y | `usePlugins.ts` |
+| 复制粘贴 | Ctrl+C / Ctrl+V / Ctrl+X | `usePlugins.ts` |
 
-### 4. 编辑功能
-- **孪生体编辑**: 包含概览、属性、方法、规划四个标签页
-- **系统组编辑**: 包含子成员管理功能
-- **预览/编辑模式**: 支持两种模式切换，默认为预览模式
-- **数据验证**: 完整的表单验证和数据合法性检查
+### 3. 容器自动扩容
 
-### 5. 数据持久化
-- 使用 Pinia 统一管理节点数据
-- 支持本地 localStorage 持久化
-- 刷新页面后可恢复原有数据状态
+- 子节点移动/调整大小时，容器自动扩展
+- 拖拽节点到空容器上方时，预览扩容效果
+- 支持配置最小尺寸、内边距、节流延迟
 
-## 项目结构
+### 4. 对齐与分布
+
+| 功能 | 说明 |
+|------|------|
+| 左/中/右对齐 | 多节点水平对齐 |
+| 顶/中/底对齐 | 多节点垂直对齐 |
+| 水平等距分布 | 多节点水平间距相等 |
+| 垂直等距分布 | 多节点垂直间距相等 |
+
+### 5. 导出功能
+
+支持导出为 PNG、JPEG、SVG 格式图片。
+
+### 6. 画布锁定
+
+锁定后禁止编辑操作，但允许选择和查看。
+
+## 三、API 接口
+
+### 基础路径
+
+```
+BASE_URL: /api
+```
+
+### 接口列表
+
+#### 1. 画布 API
+
+| 方法 | 路径 | 说明 | 参数 |
+|------|------|------|------|
+| GET | `/graph/list` | 获取画布列表 | `page`, `pageSize` |
+| GET | `/graph/:id` | 获取画布详情 | `id` |
+| POST | `/graph/save` | 保存画布 | `id?`, `name`, `description?`, `nodes`, `edges` |
+| DELETE | `/graph/delete/:id` | 删除画布 | `id` |
+
+#### 2. 节点 API
+
+| 方法 | 路径 | 说明 | 参数 |
+|------|------|------|------|
+| POST | `/node/save` | 保存节点（新增/更新） | `graphId`, `id?`, `type`, `x`, `y`, `width`, `height`, `label`, `data?`, `parentId?` |
+| PUT | `/node/update` | 更新节点属性 | `id`, `graphId`, `x?`, `y?`, `width?`, `height?`, `label?`, `data?`, `parentId?` |
+| DELETE | `/node/delete/:id` | 删除节点 | `id`, `graphId` (query) |
+
+#### 3. 模板 API
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| GET | `/templates/devices` | 获取设备模板列表 |
+| GET | `/templates/systems` | 获取系统容器模板列表 |
+
+### 请求/响应格式
+
+```typescript
+// 通用响应格式
+interface ApiResponse<T> {
+  code: number
+  message: string
+  data: T
+}
+
+// 保存画布参数
+interface SaveGraphParams {
+  id?: string
+  name: string
+  description?: string
+  nodes: NodeData[]
+  edges: EdgeData[]
+}
+
+// 保存节点参数
+interface SaveNodeParams {
+  graphId: string
+  id?: string
+  type: 'device' | 'system'
+  x: number
+  y: number
+  width: number
+  height: number
+  label: string
+  data?: Record<string, any>
+  parentId?: string
+}
+```
+
+## 四、数据同步机制
+
+### 自动同步事件
+
+| 事件 | 触发时机 | API 调用 |
+|------|----------|----------|
+| `node:added` | 节点添加到画布 | `POST /node/save` |
+| `node:moved` | 节点移动结束 | `PUT /node/update` |
+| `node:resized` | 节点调整大小结束 | `PUT /node/update` |
+| `node:removed` | 节点删除 | `DELETE /node/delete/:id` |
+
+### 首次放置流程
+
+1. 检查是否存在 `currentGraphId`
+2. 不存在则先调用 `POST /graph/save` 创建空画布
+3. 再调用 `POST /node/save` 保存节点
+
+## 五、项目结构
 
 ```
 src/
-├── types/                  # TypeScript 类型定义
-│   └── twin.d.ts          # 孪生体相关接口定义
-├── stores/                # Pinia 状态管理
-│   └── twinStore.ts       # 孪生体数据存储
-├── components/            # 组件目录
-│   ├── x6/               # AntV X6 相关组件
-│   │   └── X6Graph.vue   # 画布核心组件
-│   ├── twin-entity/      # 孪生体组件
-│   │   ├── TwinNode.vue  # 孪生体节点渲染
-│   │   └── TwinDrawer.vue # 孪生体编辑抽屉
-│   └── system-twin-group/ # 系统孪生体组件
-│       └── SystemGroupDrawer.vue # 系统组编辑抽屉
-├── composables/          # 组合式函数
-│   ├── useDrag.ts        # 拖拽交互逻辑
-│   ├── useLayout.ts      # 自动布局算法
-│   └── useDrawer.ts      # 抽屉管理逻辑
-├── utils/                # 工具函数
-│   └── layoutHelper.ts   # 布局计算工具
-├── styles/               # 样式文件
-│   └── index.scss        # 全局样式
-└── views/                # 页面视图
-    └── TwinVisualization.vue # 主视图页面
+├── composables/              # 组合式函数（核心逻辑）
+│   ├── useGraph.ts           # 画布管理
+│   ├── useDnd.ts             # 拖拽功能
+│   ├── useGraphPersistence.ts # 数据持久化
+│   ├── useAutoExpand.ts      # 容器自动扩容
+│   ├── useAlignment.ts       # 对齐分布
+│   ├── usePlugins.ts         # 插件管理
+│   └── ...
+├── components/
+│   ├── canvas/               # 画布组件
+│   │   ├── GraphCanvas.vue   # 主画布
+│   │   ├── Toolbar.vue       # 工具栏
+│   │   └── Stencil.vue       # 物料面板
+│   ├── nodes/                # 节点组件
+│   │   ├── DeviceNode.vue    # 设备节点
+│   │   └── SystemContainer.vue # 系统容器
+│   └── common/               # 通用组件
+├── services/api.ts           # API 服务
+├── stores/graphStore.ts      # 状态管理
+├── types/                    # 类型定义
+│   ├── api.ts               # API 类型
+│   ├── node.ts              # 节点类型
+│   └── graph.ts             # 画布类型
+├── utils/                    # 工具函数
+│   ├── graphConfig.ts       # Graph 配置
+│   ├── nodeFactory.ts       # 节点工厂
+│   ├── coordinateTransform.ts # 坐标转换
+│   └── request.ts           # HTTP 请求
+├── config/                   # 配置文件
+│   ├── nodeConfig.ts        # 节点配置
+│   └── containerConfig.ts   # 容器配置
+└── constants/                # 常量定义
+    ├── stencil.ts           # 物料配置
+    └── drag.ts              # 拖拽常量
 ```
 
-## 快速开始
+## 六、快速开始
 
 ### 安装依赖
 
@@ -92,112 +204,58 @@ npm run dev
 npm run build
 ```
 
-### 代码检查和格式化
+### 代码检查
 
 ```bash
-# ESLint 检查并自动修复
 npm run lint
-
-# Prettier 格式化代码
-npm run format
 ```
 
-## 使用指南
+## 七、集成指南
 
-### 1. 创建节点
+### 1. 基础使用
 
-- 点击工具栏的"新建孪生体"按钮创建基础节点
-- 点击"新建系统组"按钮创建可包含子节点的组节点
+```vue
+<template>
+  <div class="designer">
+    <Stencil @item-drag-start="handleDragStart" />
+    <GraphCanvas @graph-ready="handleGraphReady" />
+    <Toolbar @save-graph="handleSave" />
+  </div>
+</template>
 
-### 2. 拖拽操作
+<script setup lang="ts">
+import { useDnd, useGraphPersistence } from '@/composables'
 
-- 按住节点并拖拽到目标系统组内可建立父子关系
-- 拖拽到画布空白区域可将节点移回根节点层级
-- 系统会自动阻止非法拖拽操作（如循环引用）
+const { startDrag } = useDnd()
+const { saveGraph, currentGraphId } = useGraphPersistence()
 
-### 3. 编辑节点
+const handleDragStart = (config, event) => {
+  startDrag(config, event)
+}
 
-- **双击节点**：以预览模式打开编辑抽屉
-- **点击节点编辑按钮**：以编辑模式打开抽屉
-- 在抽屉中可以修改节点的各种属性
+const handleSave = async () => {
+  await saveGraph('My Topology')
+}
+</script>
+```
 
-### 4. 布局管理
+### 2. 后端对接
 
-- 系统会自动处理节点的布局排布
-- 可以通过工具栏的"自动布局"按钮重新整理所有节点
+实现以上 API 接口，返回符合 `ApiResponse<T>` 格式的数据即可。Mock 服务示例见 `mock/graph.ts`。
 
-### 5. 数据管理
+## 八、注意事项
 
-- 所有操作都会自动保存到本地存储
-- 刷新页面后数据会自动恢复
-- 可以通过"清空画布"按钮重置所有数据
+1. **节点 ID**：前端使用 `nanoid()` 生成，保存时传递给后端
+2. **画布 ID**：首次保存时由后端生成，前端缓存到 `currentGraphId`
+3. **层级管理**：容器 zIndex 较低（10），设备节点 zIndex 较高（20）
+4. **状态同步**：节点操作会自动触发 API 调用，无需手动调用
 
-## 核心组件说明
-
-### X6Graph.vue
-AntV X6 画布组件，负责节点的可视化渲染和基础交互。
-
-### TwinNode.vue
-孪生体节点组件，提供节点的视觉展示和基础交互。
-
-### useDrag.ts
-拖拽交互逻辑，处理节点拖拽的开始、移动和结束事件。
-
-### useLayout.ts
-自动布局算法，计算节点的位置和组节点的尺寸。
-
-### twinStore.ts
-Pinia 状态管理，维护所有节点数据的一致性。
-
-## 开发规范
-
-### 代码风格
-- 使用 TypeScript 进行类型约束
-- 遵循 ESLint 和 Prettier 规范
-- 组件使用 script setup 语法糖
-- 变量和函数采用语义化命名
-
-### 提交规范
-- 使用 conventional commits 规范
-- 提交信息格式：`<type>(<scope>): <subject>`
-
-### 目录规范
-- 组件按功能模块组织
-- 工具函数按用途分类
-- 类型定义集中管理
-
-## 性能优化
-
-- 使用防抖处理高频事件
-- 实现按需渲染减少重绘
-- 合理使用 computed 和 watch
-- 组件懒加载优化
-
-## 浏览器兼容性
+## 九、浏览器兼容性
 
 - Chrome 90+
 - Edge 90+
 - Firefox 88+
 - Safari 14+
-
-## 已知问题
-
-1. 部分 TypeScript 类型检查可能存在警告（不影响功能）
-2. 大量节点时可能存在渲染性能问题
-3. 某些复杂布局场景下的自动调整可能不够智能
-
-## 后续优化方向
-
-1. 增加更多节点类型和样式
-2. 实现节点连接线和关系展示
-3. 添加历史记录和撤销重做功能
-4. 支持数据导入导出
-5. 增加更多布局算法选项
-6. 实现节点模板和批量操作
-
-## 贡献指南
-
-欢迎提交 Issue 和 Pull Request 来帮助改进项目。
 
 ## 许可证
 

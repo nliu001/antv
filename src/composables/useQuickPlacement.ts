@@ -28,13 +28,11 @@ export function useQuickPlacement(): UseQuickPlacementReturn {
   const startPlacement = (config: StencilItemConfig) => {
     isActive.value = true
     currentConfig.value = config
-    console.log('[useQuickPlacement] 进入放置模式:', config.label)
   }
 
   const stopPlacement = () => {
     isActive.value = false
     currentConfig.value = null
-    console.log('[useQuickPlacement] 退出放置模式')
   }
 
   const placeNode = (clientX: number, clientY: number) => {
@@ -44,7 +42,6 @@ export function useQuickPlacement(): UseQuickPlacementReturn {
     if (!graph) return
 
     if (graphStore.isLocked) {
-      console.warn('[useQuickPlacement] 画布已锁定，禁止添加新节点')
       return
     }
 
@@ -72,8 +69,6 @@ export function useQuickPlacement(): UseQuickPlacementReturn {
         { name: currentConfig.value.label }
       )
     }
-
-    console.log('[useQuickPlacement] 放置节点:', currentConfig.value.label, 'at', position)
   }
 
   const handleMouseMove = (e: MouseEvent) => {

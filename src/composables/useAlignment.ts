@@ -28,12 +28,10 @@ export function useAlignment(): UseAlignmentReturn {
   const getSelectedNodes = (): Node[] => {
     const graph = getGraph()
     if (!graph) {
-      console.warn('[useAlignment] Graph 实例不存在')
       return []
     }
     
     const cells = graph.getSelectedCells()
-    console.log('[useAlignment] 选中 cells:', cells.length)
     return cells.filter(cell => cell.isNode && cell.isNode()) as Node[]
   }
 
@@ -68,7 +66,6 @@ export function useAlignment(): UseAlignmentReturn {
   const alignNodes = (mode: AlignMode) => {
     const nodes = getSelectedNodes()
     if (nodes.length < 2) {
-      console.warn('[useAlignment] 至少需要选中 2 个节点')
       return
     }
 
@@ -103,14 +100,11 @@ export function useAlignment(): UseAlignmentReturn {
 
       node.setPosition(newX, newY)
     })
-
-    console.log(`[useAlignment] 执行对齐: ${mode}`)
   }
 
   const distributeNodes = (mode: DistributeMode) => {
     const nodes = getSelectedNodes()
     if (nodes.length < 3) {
-      console.warn('[useAlignment] 等距分布至少需要选中 3 个节点')
       return
     }
 
@@ -147,8 +141,6 @@ export function useAlignment(): UseAlignmentReturn {
         currentY += nodeBBox.height + gap
       })
     }
-
-    console.log(`[useAlignment] 执行等距分布: ${mode}`)
   }
 
   const alignLeft = () => alignNodes('left')
