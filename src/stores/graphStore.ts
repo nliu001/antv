@@ -313,31 +313,18 @@ export const useGraphStore = defineStore('graph', {
 
     /**
      * 锁定画布
-     * @description 禁止所有编辑操作
+     * @description 禁止节点移动和编辑，但允许选择和画布平移
      */
     lockGraph() {
       if (!this.graph) return
 
       this.isLocked = true
       
-      this.graph.disableKeyboard()
-      this.graph.disablePanning()
-      this.graph.disableSelection()
-      this.graph.disableSnapline()
+      ;(this.graph as any).disableSelectionMovable()
       this.graph.disableClipboard()
       this.graph.disableHistory()
 
-      this.graph.getNodes().forEach(node => {
-        node.setAttrs({
-          body: {
-            style: {
-              cursor: 'not-allowed'
-            }
-          }
-        })
-      })
-
-      console.log('[GraphStore] 画布已锁定')
+      console.log('[GraphStore] 画布已锁定（节点不可移动，画布可平移）')
     },
 
     /**
@@ -349,22 +336,9 @@ export const useGraphStore = defineStore('graph', {
 
       this.isLocked = false
       
-      this.graph.enableKeyboard()
-      this.graph.enablePanning()
-      this.graph.enableSelection()
-      this.graph.enableSnapline()
+      ;(this.graph as any).enableSelectionMovable()
       this.graph.enableClipboard()
       this.graph.enableHistory()
-
-      this.graph.getNodes().forEach(node => {
-        node.setAttrs({
-          body: {
-            style: {
-              cursor: 'move'
-            }
-          }
-        })
-      })
 
       console.log('[GraphStore] 画布已解锁')
     },
