@@ -89,6 +89,23 @@ export function useAutoExpand(initialGraph: Graph | null = null, config: Partial
     trailing: true
   })
 
+  function expandAllAncestors(node: Node) {
+    if (!graph || !expandConfig.enabled) return
+    if (isExpanding.value) return
+    if (isPaused.value) return
+
+    let currentAncestor: Node | null = node.getParent() as Node | null
+    while (currentAncestor) {
+      const ancestorData = currentAncestor.getData()
+      if (ancestorData?.type === NodeType.SYSTEM) {
+        if (movingContainerId.value !== currentAncestor.id) {
+          throttledExpand(currentAncestor)
+        }
+      }
+      currentAncestor = currentAncestor.getParent() as Node | null
+    }
+  }
+
   function setGraph(newGraph: Graph) {
     graph = newGraph
   }
@@ -118,41 +135,8 @@ export function useAutoExpand(initialGraph: Graph | null = null, config: Partial
     const positionHandler = ({ node }: { node: Node }) => {
       if (isExpanding.value) return
 
-      if (!movingContainerId.value) {
-        const parent = node.getParent()
-        if (parent && parent.isNode()) {
-          const parentData = parent.getData()
-          if (parentData?.type === NodeType.SYSTEM) {
-            throttledExpand(parent)
-          }
-        }
-        return
-      }
-
-      let currentAncestor: Node | null = node.getParent() as Node | null
-      while (currentAncestor) {
-        if (currentAncestor.id === movingContainerId.value) {
-          return
-        }
-        currentAncestor = currentAncestor.getParent() as Node | null
-      }
-
-      const parent = node.getParent()
-      if (parent && parent.isNode()) {
-        const parentData = parent.getData()
-        if (parentData?.type === NodeType.SYSTEM) {
-          throttledExpand(parent)
-        }
-      }
-    }
-    graphInstance.on('node:change:position', positionHandler)
-    eventHandlers.push(() => graphInstance.off('node:change:position', positionHandler))
-
-    const sizeHandler = ({ node }: { node: Node }) => {
-      if (isExpanding.value) return
-
       if (movingContainerId.value) {
-        let currentAncestor: Node | null = node.getParent() as Node | null
+        let currentAncestor: Node | null = node as Node | null
         while (currentAncestor) {
           if (currentAncestor.id === movingContainerId.value) {
             return
@@ -161,13 +145,25 @@ export function useAutoExpand(initialGraph: Graph | null = null, config: Partial
         }
       }
 
-      const parent = node.getParent()
-      if (parent && parent.isNode()) {
-        const parentData = parent.getData()
-        if (parentData?.type === NodeType.SYSTEM) {
-          throttledExpand(parent)
+      expandAllAncestors(node)
+    }
+    graphInstance.on('node:change:position', positionHandler)
+    eventHandlers.push(() => graphInstance.off('node:change:position', positionHandler))
+
+    const sizeHandler = ({ node }: { node: Node }) => {
+      if (isExpanding.value) return
+
+      if (movingContainerId.value) {
+        let currentAncestor: Node | null = node as Node | null
+        while (currentAncestor) {
+          if (currentAncestor.id === movingContainerId.value) {
+            return
+          }
+          currentAncestor = currentAncestor.getParent() as Node | null
         }
       }
+
+      expandAllAncestors(node)
     }
     graphInstance.on('node:change:size', sizeHandler)
     eventHandlers.push(() => graphInstance.off('node:change:size', sizeHandler))
