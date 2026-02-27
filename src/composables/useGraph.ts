@@ -3,7 +3,7 @@
  * @description 管理 Graph 实例的生命周期和初始化逻辑
  */
 
-import { ref, onMounted, onBeforeUnmount, isRef } from 'vue'
+import { ref, onMounted, onBeforeUnmount, isRef, watch } from 'vue'
 import type { Ref } from 'vue'
 import { Graph } from '@antv/x6'
 import { ElMessage } from 'element-plus'
@@ -156,6 +156,19 @@ export function useGraph(options?: Partial<GraphOptions>) {
       graph.on('node:resized', () => {
         autoExpand.resume()
       })
+
+      watch(
+        () => graphStore.isLocked,
+        (isLocked) => {
+          if (isLocked) {
+            console.log('[useGraph] 画布已锁定，暂停自动扩容')
+            autoExpand.pause()
+          } else {
+            console.log('[useGraph] 画布已解锁，恢复自动扩容')
+            autoExpand.resume()
+          }
+        }
+      )
 
       console.log('[useGraph] Graph 初始化成功')
       console.log('[useGraph] 自动扩容已启用')

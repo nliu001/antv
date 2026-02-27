@@ -4,6 +4,7 @@ import { throttle } from 'lodash-es'
 import { calculateUnionBBox, isValidBBox } from '@/utils/bboxCalculator'
 import { DEFAULT_EXPAND_CONFIG, type ExpandConfig } from '@/config/containerConfig'
 import { NodeType } from '@/types/node'
+import { useGraphStore } from '@/stores/graphStore'
 
 /**
  * 容器自动扩容 Composable
@@ -279,9 +280,14 @@ export function useAutoExpand(initialGraph: Graph | null = null, config: Partial
   /**
    * 恢复自动扩容
    * 
-   * Ctrl 键松开时恢复扩容
+   * Ctrl 键松开时恢复扩容（如果画布未锁定）
    */
   function resume() {
+    const graphStore = useGraphStore()
+    if (graphStore.isLocked) {
+      console.log('[useAutoExpand] 画布已锁定，不恢复扩容')
+      return
+    }
     isPaused.value = false
     console.log('[useAutoExpand] 扩容已恢复')
   }
