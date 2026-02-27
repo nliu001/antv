@@ -70,3 +70,43 @@ export interface SystemTemplate {
   height: number
   defaultData: Record<string, any>
 }
+
+export interface SaveNodeParams {
+  graphId: string
+  id?: string
+  type: 'device' | 'system'
+  x: number
+  y: number
+  width: number
+  height: number
+  label: string
+  data?: Record<string, any>
+  parentId?: string
+}
+
+export interface UpdateNodeParams {
+  id: string
+  graphId: string
+  x?: number
+  y?: number
+  width?: number
+  height?: number
+  label?: string
+  data?: Record<string, any>
+  parentId?: string
+}
+
+export interface NodeResponse {
+  id: string
+  graphId: string
+  type: 'device' | 'system'
+  x: number
+  y: number
+  width: number
+  height: number
+  label: string
+  data?: Record<string, any>
+  parentId?: string
+  createdAt: string
+  updatedAt: string
+}

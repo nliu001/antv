@@ -6,6 +6,9 @@ import type {
   SaveGraphParams,
   DeviceTemplate,
   SystemTemplate,
+  SaveNodeParams,
+  UpdateNodeParams,
+  NodeResponse,
 } from '@/types/api'
 
 export const graphApi = {
@@ -23,6 +26,20 @@ export const graphApi = {
 
   delete(id: string) {
     return api.delete<ApiResponse<null>>(`/graph/delete/${id}`)
+  },
+}
+
+export const nodeApi = {
+  save(data: SaveNodeParams) {
+    return api.post<ApiResponse<NodeResponse>>('/node/save', data)
+  },
+
+  update(data: UpdateNodeParams) {
+    return api.put<ApiResponse<NodeResponse>>('/node/update', data)
+  },
+
+  delete(id: string, graphId: string) {
+    return api.delete<ApiResponse<null>>(`/node/delete/${id}?graphId=${graphId}`)
   },
 }
 

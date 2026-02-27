@@ -4,6 +4,7 @@ import Mock from 'mockjs'
 const Random = Mock.Random
 
 const graphList: any[] = []
+const nodeList: any[] = []
 
 export default [
   {
@@ -201,6 +202,115 @@ export default [
             defaultData: { provider: 'AWS', region: 'us-east-1' },
           },
         ],
+      }
+    },
+  },
+  {
+    url: '/api/node/save',
+    method: 'post',
+    response: ({ body }: any) => {
+      const { graphId, id, type, x, y, width, height, label, data, parentId } = body
+      const now = new Date().toISOString()
+
+      if (id) {
+        const index = nodeList.findIndex(n => n.id === id)
+        if (index !== -1) {
+          nodeList[index] = {
+            ...nodeList[index],
+            x,
+            y,
+            width,
+            height,
+            label,
+            data,
+            parentId,
+            updatedAt: now,
+          }
+          return {
+            code: 200,
+            message: 'success',
+            data: nodeList[index],
+          }
+        }
+      }
+
+      const newNode = {
+        id: Random.guid(),
+        graphId,
+        type,
+        x,
+        y,
+        width,
+        height,
+        label,
+        data,
+        parentId,
+        createdAt: now,
+        updatedAt: now,
+      }
+      nodeList.push(newNode)
+
+      return {
+        code: 200,
+        message: 'success',
+        data: newNode,
+      }
+    },
+  },
+  {
+    url: '/api/node/update',
+    method: 'put',
+    response: ({ body }: any) => {
+      const { id, graphId, x, y, width, height, label, data, parentId } = body
+      const node = nodeList.find(n => n.id === id && n.graphId === graphId)
+      
+      if (!node) {
+        return {
+          code: 404,
+          message: 'Node not found',
+          data: null,
+        }
+      }
+
+      const now = new Date().toISOString()
+      Object.assign(node, {
+        ...(x !== undefined && { x }),
+        ...(y !== undefined && { y }),
+        ...(width !== undefined && { width }),
+        ...(height !== undefined && { height }),
+        ...(label !== undefined && { label }),
+        ...(data !== undefined && { data }),
+        ...(parentId !== undefined && { parentId }),
+        updatedAt: now,
+      })
+
+      return {
+        code: 200,
+        message: 'success',
+        data: node,
+      }
+    },
+  },
+  {
+    url: '/api/node/delete/:id',
+    method: 'delete',
+    response: ({ query }: any) => {
+      const { id } = query
+      const { graphId } = query
+      const index = nodeList.findIndex(n => n.id === id && n.graphId === graphId)
+      
+      if (index !== -1) {
+        nodeList.splice(index, 1)
+        return {
+          code: 200,
+          message: 'success',
+          data: null,
+        }
+      }
+      return {
+        code: 404,
+        message: 'Node not found',
+        data: null,
       }
     },
   },
