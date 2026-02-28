@@ -11,6 +11,42 @@ interface OriginalSize {
 const originalSizes = new Map<string, OriginalSize>()
 let previewingParentId: string | null = null
 
+// 获取节点的所有祖先容器 ID
+function getAncestorContainerIds(nodeId: string, graph: Graph): Set<string> {
+  const ancestorIds = new Set<string>()
+  const node = graph.getCellById(nodeId) as Node
+  if (!node) return ancestorIds
+  
+  let currentAncestor: Node | null = node.getParent() as Node | null
+  while (currentAncestor) {
+    ancestorIds.add(currentAncestor.id)
+    currentAncestor = currentAncestor.getParent() as Node | null
+  }
+  return ancestorIds
+}
+
+// 获取节点的所有后代容器 ID（递归）
+function getDescendantContainerIds(nodeId: string, graph: Graph): Set<string> {
+  const descendantIds = new Set<string>()
+  const node = graph.getCellById(nodeId) as Node
+  if (!node) return descendantIds
+  
+  const addDescendants = (n: Node) => {
+    const children = n.getChildren()
+    if (children) {
+      children.forEach(child => {
+        if (child.isNode()) {
+          descendantIds.add(child.id)
+          addDescendants(child as Node)
+        }
+      })
+    }
+  }
+  
+  addDescendants(node)
+  return descendantIds
+}
+
 export const EmbeddingPreviewCore = {
   getPreviewingParentId: () => previewingParentId,
   
@@ -21,6 +57,9 @@ export const EmbeddingPreviewCore = {
   ) => {
     const rawGraph = toRaw(graph)
     
+    const excludeAncestorIds = excludeNodeId ? getAncestorContainerIds(excludeNodeId, rawGraph) : new Set<string>()
+    const excludeDescendantIds = excludeNodeId ? getDescendantContainerIds(excludeNodeId, rawGraph) : new Set<string>()
+    
     const allNodes = rawGraph.getNodes()
     const emptyContainers = allNodes.filter(n => {
       const data = n.getData<SystemNodeData>()
@@ -28,8 +67,10 @@ export const EmbeddingPreviewCore = {
       const children = n.getChildren()
       const isEmpty = !children || children.length === 0
       const isNotExcluded = n.id !== excludeNodeId
+      const isNotAncestor = !excludeAncestorIds.has(n.id)
+      const isNotDescendant = !excludeDescendantIds.has(n.id)
       
-      return isSystem && isEmpty && isNotExcluded
+      return isSystem && isEmpty && isNotExcluded && isNotAncestor && isNotDescendant
     })
 
     if (emptyContainers.length === 0) {
