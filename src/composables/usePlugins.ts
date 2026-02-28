@@ -188,7 +188,6 @@ export function usePlugins(options: UsePluginsOptions = {}): UsePluginsReturn {
           resizing: snaplineOptions.resizing,
         })
       )
-      console.log('[usePlugins] Snapline 插件已启用')
     }
 
     if (historyOptions.enabled) {
@@ -198,7 +197,6 @@ export function usePlugins(options: UsePluginsOptions = {}): UsePluginsReturn {
           stackSize: historyOptions.stackSize,
         })
       )
-      console.log('[usePlugins] History 插件已启用')
     }
 
     if (selectionOptions.enabled) {
@@ -212,7 +210,6 @@ export function usePlugins(options: UsePluginsOptions = {}): UsePluginsReturn {
           pointerEvents: 'none',
         })
       )
-      console.log('[usePlugins] Selection 插件已启用')
     }
 
     if (keyboardOptions.enabled) {
@@ -222,7 +219,6 @@ export function usePlugins(options: UsePluginsOptions = {}): UsePluginsReturn {
           global: keyboardOptions.global,
         })
       )
-      console.log('[usePlugins] Keyboard 插件已启用')
     }
 
     if (clipboardOptions.enabled) {
@@ -231,7 +227,6 @@ export function usePlugins(options: UsePluginsOptions = {}): UsePluginsReturn {
           enabled: true,
         })
       )
-      console.log('[usePlugins] Clipboard 插件已启用')
     }
 
     graph.use(
@@ -255,59 +250,49 @@ export function usePlugins(options: UsePluginsOptions = {}): UsePluginsReturn {
         rotating: false,
       })
     )
-    console.log('[usePlugins] Transform 插件已启用（仅容器节点可调整大小）')
 
     graph.use(new Export())
-    console.log('[usePlugins] Export 插件已启用')
   }
 
   const setupKeyboardShortcuts = (graph: Graph) => {
     graph.bindKey(['ctrl+z', 'meta+z'], () => {
       graph.undo()
-      console.log('[usePlugins] 执行撤销')
     })
 
     graph.bindKey(['ctrl+y', 'meta+y', 'ctrl+shift+z', 'meta+shift+z'], () => {
       graph.redo()
-      console.log('[usePlugins] 执行重做')
     })
 
     graph.bindKey(['ctrl+c', 'meta+c'], () => {
       graph.copy(graph.getSelectedCells())
-      console.log('[usePlugins] 执行复制')
     })
 
     graph.bindKey(['ctrl+v', 'meta+v'], () => {
       graph.paste()
-      console.log('[usePlugins] 执行粘贴')
     })
 
     graph.bindKey(['ctrl+x', 'meta+x'], () => {
       graph.cut(graph.getSelectedCells())
-      console.log('[usePlugins] 执行剪切')
     })
 
     graph.bindKey(['delete', 'backspace'], () => {
+      if (graphStore.isLocked) return
+      
       const cells = graph.getSelectedCells()
       if (cells.length > 0) {
         graph.removeCells(cells)
-        console.log('[usePlugins] 删除选中节点:', cells.length)
       }
     })
 
     graph.bindKey(['ctrl+a', 'meta+a'], () => {
       const nodes = graph.getNodes()
       graph.select(nodes)
-      console.log('[usePlugins] 全选节点:', nodes.length)
     })
-
-    console.log('[usePlugins] 快捷键已绑定')
   }
 
   const init = () => {
     const graph = getGraph()
     if (!graph) {
-      console.warn('[usePlugins] Graph 实例不存在')
       return
     }
 
@@ -316,7 +301,7 @@ export function usePlugins(options: UsePluginsOptions = {}): UsePluginsReturn {
   }
 
   const destroy = () => {
-    console.log('[usePlugins] 已销毁')
+    // 清理资源
   }
 
   onBeforeUnmount(() => {

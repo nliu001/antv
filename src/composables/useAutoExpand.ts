@@ -6,293 +6,264 @@ import { DEFAULT_EXPAND_CONFIG, type ExpandConfig } from '@/config/containerConf
 import { NodeType } from '@/types/node'
 import { useGraphStore } from '@/stores/graphStore'
 
-/**
- * 容器自动扩容 Composable
- * 
- * 核心功能：
- * 1. 监听子节点位置/尺寸变化
- * 2. 计算并集包围盒
- * 3. 自动调整容器位置和尺寸
- * 4. 使用 translate() 确保子节点跟随
- * 
- * 关键验证结论：
- * - 所有坐标均为绝对坐标（相对于画布）
- * - 必须使用 translate() 而非 setPosition()
- * - 参考：docs/04-容器自动扩容/X6坐标系统验证报告.md
- */
 export function useAutoExpand(initialGraph: Graph | null = null, config: Partial<ExpandConfig> = {}) {
-  // 合并配置
   const expandConfig = { ...DEFAULT_EXPAND_CONFIG, ...config }
 
-  // Graph 实例引用（可能延迟初始化）
   let graph = initialGraph
 
-  // 扩容状态标志（避免递归触发）
   const isExpanding = ref(false)
-
-  // 暂停标志（Ctrl 键按下时暂停扩容）
   const isPaused = ref(false)
+  const movingContainerId = ref<string | null>(null)
 
-  // 事件处理器引用（用于清理）
   const eventHandlers: Array<() => void> = []
 
-  /**
-   * 扩容核心算法
-   * 
-   * 策略：固定容器左上角（可向左上扩展，不向右下收缩）
-   * 
-   * 规则：
-   * 1. 容器左上角可以向左/上扩展（当子节点在外部时）
-   * 2. 容器左上角不会向右/下收缩
-   * 3. 保持最小尺寸约束（200x150）
-   * 4. 初始入组时：保持容器原位置，只扩展尺寸
-   * 
-   * @param container 容器节点
-   */
   function expandContainer(container: Node) {
     if (!graph || !expandConfig.enabled) return
-    if (isExpanding.value) return // 防止递归触发
-    if (isPaused.value) {
-      console.log('[useAutoExpand] 扩容已暂停，跳过')
-      return // Ctrl 键按下时跳过扩容
-    }
+    if (isExpanding.value) return
+    if (isPaused.value) return
+    if (movingContainerId.value === container.id) return
 
     isExpanding.value = true
 
     try {
-      // 1. 获取容器当前位置和尺寸
       const oldPos = container.getPosition()
       const oldSize = container.getSize()
-      console.log(`[useAutoExpand] 容器当前状态: pos=(${oldPos.x}, ${oldPos.y}), size=(${oldSize.width}, ${oldSize.height})`)
 
-      // 2. 获取所有子节点
       const children = container.getChildren()
       if (!children || children.length === 0) {
-        // 空容器处理：保持位置不变，应用最小尺寸
         container.resize(expandConfig.minWidth, expandConfig.minHeight)
-        console.log(`[useAutoExpand] 空容器，应用最小尺寸: (${expandConfig.minWidth}, ${expandConfig.minHeight})`)
         return
       }
 
-      // 过滤出节点类型的子元素（排除边）
       const childNodes = children.filter((child) => child.isNode()) as Node[]
       if (childNodes.length === 0) {
         container.resize(expandConfig.minWidth, expandConfig.minHeight)
-        console.log(`[useAutoExpand] 无子节点，应用最小尺寸`)
         return
       }
 
-      // 3. 计算并集包围盒（绝对坐标）
       const unionBBox = calculateUnionBBox(childNodes, graph)
       if (!isValidBBox(unionBBox)) {
-        console.warn(`[useAutoExpand] 无效的包围盒`)
         return
       }
-      console.log(`[useAutoExpand] 子节点并集包围盒: x=${unionBBox.x}, y=${unionBBox.y}, w=${unionBBox.width}, h=${unionBBox.height}`)
 
-      // 4. 计算容器新的左上角（可向左/上扩展，不向右/下收缩）
-      // 添加 PADDING 后的子节点包围盒左上角
       const childWithPaddingX = unionBBox.x - expandConfig.padding
       const childWithPaddingY = unionBBox.y - expandConfig.padding
       
-      // 容器新左上角 = min(当前左上角, 子节点包围盒-PADDING)
       const newX = Math.min(oldPos.x, childWithPaddingX)
       const newY = Math.min(oldPos.y, childWithPaddingY)
 
-      // 5. 计算容器新的右下角（可扩展，不收缩）
-      // 当前容器右下角
       const oldRight = oldPos.x + oldSize.width
       const oldBottom = oldPos.y + oldSize.height
       
-      // 子节点包围盒右下角 + PADDING
       const childRight = unionBBox.x + unionBBox.width + expandConfig.padding
       const childBottom = unionBBox.y + unionBBox.height + expandConfig.padding
       
-      // 容器新右下角 = max(当前右下角, 子节点包围盒+PADDING)
       const newRight = Math.max(oldRight, childRight)
       const newBottom = Math.max(oldBottom, childBottom)
 
-      // 6. 计算新尺寸
       let newWidth = newRight - newX
       let newHeight = newBottom - newY
       
-      // 应用最小尺寸约束
       newWidth = Math.max(newWidth, expandConfig.minWidth)
       newHeight = Math.max(newHeight, expandConfig.minHeight)
 
-      console.log(`[useAutoExpand] 计算结果: newPos=(${newX}, ${newY}), newSize=(${newWidth}, ${newHeight})`)
-
-      // 7. 判断是否需要调整位置
       const needMoveLeft = newX < oldPos.x
       const needMoveUp = newY < oldPos.y
       const positionChanged = needMoveLeft || needMoveUp
 
-      // 8. 应用位置调整（仅当需要向左/上扩展时）
-      // ✅ 使用 setPosition() 不会触发子节点跟随
       if (positionChanged) {
         container.setPosition(newX, newY)
-        console.log(`[useAutoExpand] 容器向左上扩展: (${oldPos.x}, ${oldPos.y}) -> (${newX}, ${newY})`)
-      } else {
-        console.log(`[useAutoExpand] 容器位置保持不变: (${oldPos.x}, ${oldPos.y})`)
       }
 
-      // 9. 应用尺寸调整（使用过渡动画）
       container.resize(newWidth, newHeight, { 
         absolute: true,
         silent: false 
       })
-      console.log(`[useAutoExpand] 容器尺寸调整: (${oldSize.width}, ${oldSize.height}) -> (${newWidth}, ${newHeight})`)
     } finally {
       isExpanding.value = false
     }
   }
 
-  /**
-   * 创建节流的扩容函数
-   * 
-   * 使用 throttle 替代 debounce，保证固定频率更新，避免卡顿感
-   * leading: true - 第一次调用立即执行
-   * trailing: true - 最后一次调用也会执行
-   */
   const throttledExpand = throttle(expandContainer, expandConfig.debounceDelay, {
     leading: true,
     trailing: true
   })
 
-  /**
-   * 设置 Graph 实例
-   * 
-   * 用于 Graph 延迟初始化的场景
-   * 
-   * @param newGraph Graph 实例
-   */
-  function setGraph(newGraph: Graph) {
-    graph = newGraph
-    console.log('[useAutoExpand] Graph 实例已设置')
+  function expandAllAncestors(node: Node) {
+    if (!graph || !expandConfig.enabled) return
+    if (isPaused.value) return
+
+    const ancestorsToExpand: Node[] = []
+    let currentAncestor: Node | null = node.getParent() as Node | null
+    while (currentAncestor) {
+      const ancestorData = currentAncestor.getData()
+      if (ancestorData?.type === NodeType.SYSTEM) {
+        if (movingContainerId.value !== currentAncestor.id) {
+          ancestorsToExpand.push(currentAncestor)
+        }
+      }
+      currentAncestor = currentAncestor.getParent() as Node | null
+    }
+
+    for (let i = ancestorsToExpand.length - 1; i >= 0; i--) {
+      expandContainerDirect(ancestorsToExpand[i])
+    }
   }
 
-  /**
-   * 启用自动扩容
-   * 
-   * 监听以下事件：
-   * - node:change:position：子节点位置变化
-   * - node:change:size：子节点尺寸变化
-   * - node:removed：子节点删除
-   */
+  function expandContainerDirect(container: Node) {
+    if (!graph || !expandConfig.enabled) return
+    if (isPaused.value) return
+    if (movingContainerId.value === container.id) return
+
+    const oldPos = container.getPosition()
+    const oldSize = container.getSize()
+
+    const children = container.getChildren()
+    if (!children || children.length === 0) {
+      container.resize(expandConfig.minWidth, expandConfig.minHeight)
+      return
+    }
+
+    const childNodes = children.filter((child) => child.isNode()) as Node[]
+    if (childNodes.length === 0) {
+      container.resize(expandConfig.minWidth, expandConfig.minHeight)
+      return
+    }
+
+    const unionBBox = calculateUnionBBox(childNodes, graph)
+    if (!isValidBBox(unionBBox)) {
+      return
+    }
+
+    const childWithPaddingX = unionBBox.x - expandConfig.padding
+    const childWithPaddingY = unionBBox.y - expandConfig.padding
+    
+    const newX = Math.min(oldPos.x, childWithPaddingX)
+    const newY = Math.min(oldPos.y, childWithPaddingY)
+
+    const oldRight = oldPos.x + oldSize.width
+    const oldBottom = oldPos.y + oldSize.height
+    
+    const childRight = unionBBox.x + unionBBox.width + expandConfig.padding
+    const childBottom = unionBBox.y + unionBBox.height + expandConfig.padding
+    
+    const newRight = Math.max(oldRight, childRight)
+    const newBottom = Math.max(oldBottom, childBottom)
+
+    let newWidth = newRight - newX
+    let newHeight = newBottom - newY
+    
+    newWidth = Math.max(newWidth, expandConfig.minWidth)
+    newHeight = Math.max(newHeight, expandConfig.minHeight)
+
+    const needMoveLeft = newX < oldPos.x
+    const needMoveUp = newY < oldPos.y
+    const positionChanged = needMoveLeft || needMoveUp
+
+    if (positionChanged) {
+      container.setPosition(newX, newY)
+    }
+
+    container.resize(newWidth, newHeight, { 
+      absolute: true,
+      silent: false 
+    })
+  }
+
+  function setGraph(newGraph: Graph) {
+    graph = newGraph
+  }
+
   function enable() {
     if (!graph) return
 
-    // 保存 graph 引用到局部常量，避免 TypeScript null 检查警告
     const graphInstance = graph
 
-    // 监听子节点位置变化
-    const positionHandler = ({ node }: { node: Node }) => {
-      if (isExpanding.value) return // 跳过扩容触发的位置变化
+    const containerMoveStartHandler = ({ node }: { node: Node }) => {
+      const nodeData = node.getData()
+      if (nodeData?.type === NodeType.SYSTEM) {
+        movingContainerId.value = node.id
+      }
+    }
+    graphInstance.on('node:move', containerMoveStartHandler)
+    eventHandlers.push(() => graphInstance.off('node:move', containerMoveStartHandler))
 
-      const parent = node.getParent()
-      if (parent && parent.isNode()) {
-        const parentData = parent.getData()
-        // 仅处理系统容器
-        if (parentData?.type === NodeType.SYSTEM) {
-          throttledExpand(parent)
+    const containerMoveEndHandler = ({ node }: { node: Node }) => {
+      if (movingContainerId.value === node.id) {
+        movingContainerId.value = null
+      }
+    }
+    graphInstance.on('node:moved', containerMoveEndHandler)
+    eventHandlers.push(() => graphInstance.off('node:moved', containerMoveEndHandler))
+
+    const positionHandler = ({ node }: { node: Node }) => {
+      if (isExpanding.value) return
+
+      if (movingContainerId.value) {
+        if (node.id === movingContainerId.value) {
+          // 节点本身是正在移动的容器，允许触发其父容器扩容
+        } else {
+          let currentAncestor: Node | null = node.getParent() as Node | null
+          while (currentAncestor) {
+            if (currentAncestor.id === movingContainerId.value) {
+              return
+            }
+            currentAncestor = currentAncestor.getParent() as Node | null
+          }
         }
       }
+
+      expandAllAncestors(node)
     }
     graphInstance.on('node:change:position', positionHandler)
     eventHandlers.push(() => graphInstance.off('node:change:position', positionHandler))
 
-    // 监听子节点尺寸变化
     const sizeHandler = ({ node }: { node: Node }) => {
       if (isExpanding.value) return
 
-      const parent = node.getParent()
-      if (parent && parent.isNode()) {
-        const parentData = parent.getData()
-        if (parentData?.type === NodeType.SYSTEM) {
-          throttledExpand(parent)
+      if (movingContainerId.value) {
+        if (node.id === movingContainerId.value) {
+          // 节点本身是正在移动的容器，允许触发其父容器扩容
+        } else {
+          let currentAncestor: Node | null = node.getParent() as Node | null
+          while (currentAncestor) {
+            if (currentAncestor.id === movingContainerId.value) {
+              return
+            }
+            currentAncestor = currentAncestor.getParent() as Node | null
+          }
         }
       }
+
+      expandAllAncestors(node)
     }
     graphInstance.on('node:change:size', sizeHandler)
     eventHandlers.push(() => graphInstance.off('node:change:size', sizeHandler))
-
-    // ❌ 移除 node:removed 监听器
-    // 原因：子节点出组时不应触发容器收缩
-    // 容器遵循"不向右下收缩"原则，即使子节点离开也保持当前尺寸
-    // 详见：规范文档 P1 和日志分析报告
-    // 
-    // 问题复现：
-    // 1. removeChild() 触发 node:removed 事件
-    // 2. removeHandler 检测到 children.length === 0
-    // 3. expandContainer() 收缩容器到最小尺寸
-    // 4. 导致出组的子节点"消失"（被遮挡或超出视口）
-    //
-    // const removeHandler = ({ node }: { node: Node }) => {
-    //   const parent = node.getParent()
-    //   if (parent && parent.isNode()) {
-    //     const parentData = parent.getData()
-    //     if (parentData?.type === NodeType.SYSTEM) {
-    //       throttledExpand(parent)
-    //     }
-    //   }
-    // }
-    // graphInstance.on('node:removed', removeHandler)
-    // eventHandlers.push(() => graphInstance.off('node:removed', removeHandler))
-
-    console.log('[useAutoExpand] 自动扩容已启用')
   }
 
-  /**
-   * 禁用自动扩容
-   */
   function disable() {
-    // 清理所有事件监听器
     eventHandlers.forEach((cleanup) => cleanup())
     eventHandlers.length = 0
-
-    // 取消待执行的节流函数
     throttledExpand.cancel()
-
-    console.log('[useAutoExpand] 自动扩容已禁用')
   }
 
-  /**
-   * 手动触发容器扩容
-   * 
-   * @param container 容器节点
-   */
   function manualExpand(container: Node) {
-    // 取消节流，立即执行
     throttledExpand.cancel()
     expandContainer(container)
   }
 
-  /**
-   * 暂停自动扩容
-   * 
-   * 用于 Ctrl 键按下时禁用扩容
-   */
   function pause() {
     isPaused.value = true
-    console.log('[useAutoExpand] 扩容已暂停')
   }
 
-  /**
-   * 恢复自动扩容
-   * 
-   * Ctrl 键松开时恢复扩容（如果画布未锁定）
-   */
   function resume() {
     const graphStore = useGraphStore()
     if (graphStore.isLocked) {
-      console.log('[useAutoExpand] 画布已锁定，不恢复扩容')
       return
     }
     isPaused.value = false
-    console.log('[useAutoExpand] 扩容已恢复')
   }
 
-  // 组件卸载时自动清理
   onUnmounted(() => {
     disable()
   })

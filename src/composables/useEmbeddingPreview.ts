@@ -20,6 +20,12 @@ export function useEmbeddingPreview(_options: UseEmbeddingPreviewOptions = {}) {
   }
 
   const handleNodeMoving = ({ node }: { node: Node }) => {
+    // 跳过有父容器的节点（跟随父容器移动，不应触发嵌入预览）
+    const parent = node.getParent()
+    if (parent && parent.isNode()) {
+      return
+    }
+
     const nodeData = node.getData<DeviceNodeData | SystemNodeData>()
     
     if (nodeData?.type !== NodeType.DEVICE && nodeData?.type !== NodeType.SYSTEM) {
@@ -31,6 +37,7 @@ export function useEmbeddingPreview(_options: UseEmbeddingPreviewOptions = {}) {
 
     const childBBox = node.getBBox()
     
+    // 传入 excludeNodeId，checkAndPreview 会自动排除该节点的所有祖先容器
     EmbeddingPreviewCore.checkAndPreview(graph, childBBox, node.id)
     previewingParentId.value = EmbeddingPreviewCore.getPreviewingParentId()
   }
